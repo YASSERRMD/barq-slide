@@ -1,0 +1,28 @@
+version: v2
+
+plugins:
+  # Go protobuf types
+  - remote: buf.build/protocolbuffers/go
+    out: backend/gen
+    opt:
+      - paths=source_relative
+
+  # Go ConnectRPC server/client stubs
+  - remote: buf.build/connectrpc/go
+    out: backend/gen
+    opt:
+      - paths=source_relative
+
+  # TypeScript protobuf types (ES module)
+  - remote: buf.build/bufbuild/es
+    out: web/gen
+    opt:
+      - target=ts
+      - import_extension=none
+
+  # TypeScript ConnectRPC client stubs
+  - remote: buf.build/connectrpc/es
+    out: web/gen
+    opt:
+      - target=ts
+      - import_extension=none
