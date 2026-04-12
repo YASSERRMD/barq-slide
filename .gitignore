@@ -1,0 +1,50 @@
+# Binaries
+backend/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binary, built with `go test -c`
+*.test
+
+# Go coverage
+*.out
+coverage.html
+
+# Go build cache (don't ignore module cache)
+/backend/tmp/
+
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/.env
+web/.env.local
+web/.env.*.local
+
+# Generated protobuf stubs
+backend/gen/
+web/src/gen/
+
+# Environment
+.env
+.env.local
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Compiled assets
+backend/assets/fonts/*.ttf
