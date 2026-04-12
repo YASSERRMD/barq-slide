@@ -45,9 +45,16 @@ func Run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config) <-chan Event 
 }
 
 func emit(ch chan<- Event, ev Event) {
-	select {
-	case ch <- ev:
-	default:
+	// Use a blocking send so events are never silently dropped.
+	ch <- ev
+}
+
+func emitError(ch chan<- Event, reqID, message string, err error) {
+	ch <- Event{
+		RequestID: reqID,
+		Event:     barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_ERROR,
+		Message:   message,
+		Err:       err,
 	}
 }
 
@@ -67,12 +74,8 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 	parser := intent.NewParser(cfg.LLMProvider)
 	parsed, err := parser.Parse(ctx, spec)
 	if err != nil {
-		emit(ch, Event{
-			RequestID: reqID,
-			Event:     barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_ERROR,
-			Message:   fmt.Sprintf("intent parsing failed: %v", err),
-			Err:       err,
-		})
+		log.Error("intent parsing failed", slog.Any("error", err))
+		emitError(ch, reqID, fmt.Sprintf("intent parsing failed: %v", err), err)
 		return
 	}
 	emit(ch, Event{
@@ -87,12 +90,8 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 	arcPlanner := planner.NewArcPlanner(cfg.LLMProvider)
 	plan, err := arcPlanner.Plan(ctx, parsed)
 	if err != nil {
-		emit(ch, Event{
-			RequestID: reqID,
-			Event:     barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_ERROR,
-			Message:   fmt.Sprintf("arc planning failed: %v", err),
-			Err:       err,
-		})
+		log.Error("arc planning failed", slog.Any("error", err))
+		emitError(ch, reqID, fmt.Sprintf("arc planning failed: %v", err), err)
 		return
 	}
 	emit(ch, Event{
@@ -119,12 +118,8 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 	expander := planner.NewExpander(cfg.LLMProvider)
 	nodes, err := expander.Expand(ctx, plan, parsed)
 	if err != nil {
-		emit(ch, Event{
-			RequestID: reqID,
-			Event:     barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_ERROR,
-			Message:   fmt.Sprintf("slide expansion failed: %v", err),
-			Err:       err,
-		})
+		log.Error("slide expansion failed", slog.Any("error", err))
+		emitError(ch, reqID, fmt.Sprintf("slide expansion failed: %v", err), err)
 		return
 	}
 
