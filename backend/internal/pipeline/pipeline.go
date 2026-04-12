@@ -20,8 +20,10 @@ type Event struct {
 	Event       barqv1.GenerateStreamEvent
 	Message     string
 	ProgressPct int32
-	Slide       *barqv1.SlideNode // non-nil for SLIDE_READY events
-	Err         error             // non-nil on FAILED events
+	Slide       *barqv1.SlideNode  // non-nil for SLIDE_READY events
+	Plan        *barqv1.DeckPlan   // non-nil for PLAN_READY events
+	Tokens      *barqv1.DesignTokens // non-nil for TOKENS_READY events
+	Err         error              // non-nil on FAILED events
 }
 
 // Config bundles all pipeline dependencies.
@@ -98,11 +100,19 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_PLAN_READY,
 		Message:     fmt.Sprintf("Plan ready: %d sections", len(plan.GetSections())),
 		ProgressPct: 20,
+		Plan:        plan,
 	})
 
 	// ── Phase 3: Resolve design tokens ──────────────────────────────────────
 	log.Info("resolving design tokens")
 	tokens := defaultTokens()
+	emit(ch, Event{
+		RequestID:   reqID,
+		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_TOKENS_READY,
+		Message:     "Design tokens resolved",
+		ProgressPct: 25,
+		Tokens:      tokens,
+	})
 
 	// ── Phase 4: Expand slides ───────────────────────────────────────────────
 	log.Info("expanding slide nodes")

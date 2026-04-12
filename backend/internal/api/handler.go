@@ -45,19 +45,7 @@ func (h *Handler) GenerateDeck(
 	}
 
 	for ev := range pipeline.Run(ctx, spec, cfg) {
-		resp := &barqv1.GenerateStreamResponse{
-			RequestID:   ev.RequestID,
-			Event:       ev.Event,
-			Message:     ev.Message,
-			ProgressPct: ev.ProgressPct,
-		}
-		if ev.Slide != nil {
-			resp.Slide = ev.Slide
-		}
-		if ev.Err != nil {
-			resp.ErrorMessage = ev.Err.Error()
-		}
-		if err := stream.Send(resp); err != nil {
+		if err := streamEvent(stream, ev); err != nil {
 			return fmt.Errorf("sending stream event: %w", err)
 		}
 	}
