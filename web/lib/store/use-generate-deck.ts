@@ -10,24 +10,7 @@ import { useDeckStore } from "./deck-store";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
 
-/**
- * Build a per-call transport so dynamic LLM headers are always fresh.
- */
-function makeTransport(headers: Record<string, string>) {
-  return createConnectTransport({
-    baseUrl: API_BASE_URL,
-    fetch: (input, init) => {
-      // init.headers is a Headers instance, NOT a plain object.
-      // Spreading it ({ ...init.headers }) produces {} and drops everything,
-      // including Content-Type and Connect-Protocol-Version → 415 on the server.
-      const merged = new Headers(init?.headers);
-      for (const [k, v] of Object.entries(headers)) {
-        if (v) merged.set(k, v);
-      }
-      return fetch(input, { ...init, headers: merged });
-    },
-  });
-}
+const transport = createConnectTransport({ baseUrl: API_BASE_URL });
 
 /**
  * useGenerateDeck returns a trigger function that streams a deck-generation
@@ -53,14 +36,6 @@ export function useGenerateDeck() {
       progressPct: 0,
     });
 
-    // Build headers for dynamic LLM config.
-    const llmHeaders: Record<string, string> = {};
-    if (state.llmProvider) llmHeaders["X-Llm-Provider"] = state.llmProvider;
-    if (state.llmApiKey)   llmHeaders["X-Llm-Api-Key"]  = state.llmApiKey;
-    if (state.llmModel)    llmHeaders["X-Llm-Model"]    = state.llmModel;
-    if (state.llmBaseUrl)  llmHeaders["X-Llm-Base-Url"] = state.llmBaseUrl;
-
-    const transport = makeTransport(llmHeaders);
     const client = createClient(HeliosService, transport);
 
     const request = create(GenerateDeckRequestSchema, {

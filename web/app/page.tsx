@@ -1,21 +1,16 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { PromptInput } from "@/components/prompt-input";
 import { SlideEditor } from "@/components/slide-editor";
 import { DownloadPPTX } from "@/components/download-pptx";
 import { GenerationProgress } from "@/components/generation-progress";
-import { LlmSettingsModal } from "@/components/llm-settings-modal";
 import { useDeckStore } from "@/lib/store/deck-store";
 
 export default function HomePage() {
   const status = useDeckStore((s) => s.progress.status);
   const slideCount = useDeckStore((s) => s.slideOrder.length);
-  const llmApiKey = useDeckStore((s) => s.llmApiKey);
-  const llmProvider = useDeckStore((s) => s.llmProvider);
 
   const isIdle = status === "idle";
-  const needsApiKey = llmProvider !== "ollama" && !llmApiKey;
 
   return (
     <main className="flex min-h-screen flex-col items-center p-6 md:p-12 gap-6">
@@ -28,15 +23,6 @@ export default function HomePage() {
           <p className="text-muted-foreground text-sm">
             Describe your topic and let AI build the deck.
           </p>
-        </div>
-      )}
-
-      {/* API key warning banner */}
-      {needsApiKey && (
-        <div className="w-full max-w-2xl flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 text-sm animate-fade-in">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span className="flex-1">No API key configured — slides cannot be generated.</span>
-          <LlmSettingsModal />
         </div>
       )}
 
