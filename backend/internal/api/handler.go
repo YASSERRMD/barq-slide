@@ -41,10 +41,26 @@ func (h *Handler) GenerateDeck(
 	)
 	log.Info("deck generation started")
 
+	// Prefer headers sent by the client; fall back to the backend-stored config.
 	dynProvider := req.Header().Get("X-Llm-Provider")
 	dynKey := req.Header().Get("X-Llm-Api-Key")
 	dynModel := req.Header().Get("X-Llm-Model")
 	dynBaseUrl := req.Header().Get("X-Llm-Base-Url")
+
+	if dynProvider == "" {
+		stored := globalLLMConfig.Get()
+		dynProvider = stored.Provider
+		dynKey = stored.APIKey
+		dynModel = stored.Model
+		dynBaseUrl = stored.BaseURL
+	}
+
+	log.Info("llm config resolved",
+		slog.String("provider", dynProvider),
+		slog.Bool("has_key", dynKey != ""),
+		slog.String("model", dynModel),
+		slog.String("base_url", dynBaseUrl),
+	)
 
 	var provider llm.Provider
 	var err error

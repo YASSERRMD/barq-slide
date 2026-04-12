@@ -1,20 +1,80 @@
 "use client";
 
-import { useState } from "react";
-import { useDeckStore } from "@/lib/store/deck-store";
-import { AlertTriangle, Eye, EyeOff, Settings2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Settings2, X } from "lucide-react";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
+
+interface LLMConfig {
+  provider: string;
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+}
 
 export function LlmSettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [configured, setConfigured] = useState(false);
 
-  const llmProvider = useDeckStore((s) => s.llmProvider);
-  const llmApiKey = useDeckStore((s) => s.llmApiKey);
-  const llmModel = useDeckStore((s) => s.llmModel);
-  const llmBaseUrl = useDeckStore((s) => s.llmBaseUrl);
-  const setLlmConfig = useDeckStore((s) => s.setLlmConfig);
+  const [config, setConfig] = useState<LLMConfig>({
+    provider: "anthropic",
+    apiKey: "",
+    model: "",
+    baseUrl: "",
+  });
 
-  const needsApiKey = llmProvider !== "ollama" && !llmApiKey;
+  // Check on mount whether backend already has a config saved
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/llm-config`)
+      .then((r) => r.json())
+      .then((data) => {
+        setConfigured(
+          data.provider === "ollama" || (data.apiKey && data.apiKey !== "***")
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load full config from backend when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch(`${API_BASE_URL}/api/llm-config`)
+      .then((r) => r.json())
+      .then((data) => {
+        setConfig({
+          provider: data.provider || "anthropic",
+          // Backend masks the key as "***" — keep field blank so user can re-enter if needed
+          apiKey: data.apiKey === "***" ? "" : (data.apiKey || ""),
+          model: data.model || "",
+          baseUrl: data.baseUrl || "",
+        });
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`${API_BASE_URL}/api/llm-config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      setConfigured(true);
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        setIsOpen(false);
+      }, 800);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -24,7 +84,7 @@ export function LlmSettingsModal() {
       >
         <Settings2 className="h-4 w-4" />
         Settings
-        {needsApiKey && (
+        {!configured && (
           <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
@@ -44,89 +104,86 @@ export function LlmSettingsModal() {
 
             <h2 className="text-lg font-semibold text-foreground mb-4">LLM Configuration</h2>
 
-            {needsApiKey && (
+            {!configured && (
               <div className="flex items-start gap-2.5 mb-4 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-xs">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span>No API key set — slides cannot be generated until you enter a valid key below.</span>
+                <span>No API key saved on server — slides cannot be generated until you save a valid key.</span>
               </div>
             )}
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Provider
-                </label>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Provider</label>
                 <select
-                  value={llmProvider}
-                  onChange={(e) => setLlmConfig(e.target.value, llmApiKey, llmModel, llmBaseUrl)}
+                  value={config.provider}
+                  onChange={(e) => setConfig({ ...config, provider: e.target.value })}
                   className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
                 >
                   <option value="anthropic">Anthropic</option>
-                  <option value="openai">OpenAI</option>
+                  <option value="openai">OpenAI / OpenAI-compatible</option>
                   <option value="gemini">Gemini</option>
                   <option value="xai">xAI</option>
                   <option value="minimax">Minimax</option>
-                  <option value="ollama">Ollama</option>
+                  <option value="ollama">Ollama (local)</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  API Key
-                </label>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">API Key</label>
                 <div className="relative">
                   <input
                     type={showKey ? "text" : "password"}
-                    value={llmApiKey}
-                    onChange={(e) => setLlmConfig(llmProvider, e.target.value, llmModel, llmBaseUrl)}
-                    placeholder="Enter API Key (saved locally)"
-                    className="w-full text-sm rounded-lg border border-border/50 bg-background pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    value={config.apiKey}
+                    onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
+                    placeholder={config.provider === "ollama" ? "Not required for Ollama" : "Enter API key"}
+                    disabled={config.provider === "ollama"}
+                    className="w-full text-sm rounded-lg border border-border/50 bg-background pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey(!showKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    title={showKey ? "Hide key" : "Show key"}
-                  >
-                    {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                  {config.provider !== "ollama" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowKey(!showKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                 <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      Custom Base URL
-                    </label>
-                    <input
-                      type="text"
-                      value={llmBaseUrl}
-                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, llmModel, e.target.value)}
-                      placeholder="e.g. http://localhost:11434/v1"
-                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                    />
-                 </div>
-                 <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      Model Override
-                    </label>
-                    <input
-                      type="text"
-                      value={llmModel}
-                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, e.target.value, llmBaseUrl)}
-                      placeholder="e.g. llama3"
-                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                    />
-                 </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Base URL</label>
+                  <input
+                    type="text"
+                    value={config.baseUrl}
+                    onChange={(e) => setConfig({ ...config, baseUrl: e.target.value })}
+                    placeholder="e.g. https://open.bigmodel.cn/api/paas/v4"
+                    className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Model</label>
+                  <input
+                    type="text"
+                    value={config.model}
+                    onChange={(e) => setConfig({ ...config, model: e.target.value })}
+                    placeholder="e.g. glm-4"
+                    className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
               </div>
             </div>
 
             <div className="mt-6 flex justify-end">
               <button
-                onClick={() => setIsOpen(false)}
-                className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
               >
-                Done
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {saved && <CheckCircle2 className="h-4 w-4" />}
+                {saved ? "Saved!" : saving ? "Saving…" : "Save to Server"}
               </button>
             </div>
           </div>

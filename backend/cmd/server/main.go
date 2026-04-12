@@ -46,6 +46,16 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle(path, withCORS(cfg.Server.CORSAllowOrigin, svcHandler))
+	mux.Handle("/api/llm-config", withCORS(cfg.Server.CORSAllowOrigin, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			api.HandleGetLLMConfig(w, r)
+		case http.MethodPost:
+			api.HandleSetLLMConfig(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/readyz", healthHandler)
 
