@@ -119,10 +119,10 @@ export function LlmSettingsModal() {
                   onChange={(e) => setConfig({ ...config, provider: e.target.value })}
                   className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30"
                 >
-                  <option value="anthropic">Anthropic</option>
-                  <option value="openai">OpenAI / OpenAI-compatible</option>
-                  <option value="gemini">Gemini</option>
-                  <option value="xai">xAI</option>
+                  <option value="openai">OpenAI / OpenAI-compatible (z.ai, GLM, etc.)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="xai">xAI (Grok)</option>
                   <option value="minimax">Minimax</option>
                   <option value="ollama">Ollama (local)</option>
                 </select>
