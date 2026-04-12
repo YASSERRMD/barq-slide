@@ -1,5 +1,7 @@
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { createClient } from "@connectrpc/connect";
+import type { ServiceType } from "@bufbuild/protobuf";
+
 
 // The API base URL is injected at build time via NEXT_PUBLIC_API_BASE_URL.
 // Falls back to localhost for local development.
@@ -23,8 +25,9 @@ export const transport = createConnectTransport({
  * import { HeliosService } from "@/gen/barq/v1/service_connect";
  * const helios = createRPCClient(HeliosService);
  */
-export function createRPCClient<T extends object>(
+export function createRPCClient<T extends ServiceType>(
   service: T
 ): ReturnType<typeof createClient<T>> {
   return createClient(service, transport);
 }
+
