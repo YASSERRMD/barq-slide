@@ -6,11 +6,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8090:8090"
     environment:
       BARQ_SERVER__HOST: "0.0.0.0"
-      BARQ_SERVER__PORT: "8080"
-      BARQ_SERVER__CORS_ALLOW_ORIGIN: "http://localhost:3000"
+      BARQ_SERVER__PORT: "8090"
+      BARQ_SERVER__CORS_ALLOW_ORIGIN: "http://localhost:3010"
       BARQ_LLM__DEFAULT_PROVIDER: "anthropic"
       BARQ_LLM__ANTHROPIC__API_KEY: "${ANTHROPIC_API_KEY}"
       BARQ_LLM__ANTHROPIC__MODEL: "claude-opus-4-6"
@@ -22,7 +22,7 @@ services:
       BARQ_LOG__LEVEL: "info"
       BARQ_LOG__FORMAT: "json"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -33,11 +33,11 @@ services:
       context: ./web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: "http://localhost:8080"
+        NEXT_PUBLIC_API_BASE_URL: "http://localhost:8090"
     ports:
-      - "3000:3000"
+      - "3010:3000"
     environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://backend:8080"
+      NEXT_PUBLIC_API_BASE_URL: "http://backend:8090"
     depends_on:
       backend:
         condition: service_healthy
