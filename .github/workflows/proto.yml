@@ -1,0 +1,35 @@
+name: Proto CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "proto/**"
+      - "buf.yaml"
+      - "buf.gen.yaml"
+      - ".github/workflows/proto.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "proto/**"
+      - "buf.yaml"
+      - "buf.gen.yaml"
+
+jobs:
+  buf-lint:
+    name: Buf Lint & Breaking Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up buf
+        uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
+      - name: Lint proto files
+        run: buf lint
+
+      - name: Check for breaking changes
+        run: buf breaking --against '.git#branch=main'
+        continue-on-error: true
