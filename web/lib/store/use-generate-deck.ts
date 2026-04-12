@@ -81,6 +81,8 @@ export function useGenerateDeck() {
           "Connect-Protocol-Version": "1",
           "X-Llm-Provider": store().llmProvider || "anthropic",
           "X-Llm-Api-Key": store().llmApiKey || "",
+          "X-Llm-Model": store().llmModel || "",
+          "X-Llm-Base-Url": store().llmBaseUrl || "",
         },
         body: JSON.stringify({
           intent: {

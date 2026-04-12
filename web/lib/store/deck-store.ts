@@ -106,6 +106,8 @@ export interface DeckState {
   // ── Settings ─────────────────────────────────────────────────────────────────
   llmProvider: string;
   llmApiKey: string;
+  llmModel: string;
+  llmBaseUrl: string;
 
   // ── Generation State ─────────────────────────────────────────────────────────
 
@@ -144,7 +146,7 @@ export interface DeckState {
   setSelectedSlideIndex: (index: number) => void;
   setCompleted: (slides: SlideNode[]) => void;
   updateBlockText: (slideId: string, blockId: string, blockIndex: number, text: string) => void;
-  setLlmConfig: (provider: string, apiKey: string) => void;
+  setLlmConfig: (provider: string, apiKey: string, model: string, baseUrl: string) => void;
   reset: () => void;
 }
 
@@ -160,6 +162,8 @@ export const useDeckStore = create<DeckState>()(
       (set) => ({
         llmProvider: "anthropic",
         llmApiKey: "",
+        llmModel: "",
+        llmBaseUrl: "",
         requestId: null,
         progress: initialProgress,
         plan: null,
@@ -243,8 +247,8 @@ export const useDeckStore = create<DeckState>()(
           return state;
         }),
 
-      setLlmConfig: (provider, apiKey) =>
-        set({ llmProvider: provider, llmApiKey: apiKey }),
+      setLlmConfig: (provider, apiKey, model, baseUrl) =>
+        set({ llmProvider: provider, llmApiKey: apiKey, llmModel: model, llmBaseUrl: baseUrl }),
       reset: () =>
         set((state) => ({
           requestId: null,
@@ -265,6 +269,8 @@ export const useDeckStore = create<DeckState>()(
     partialize: (state) => ({
       llmProvider: state.llmProvider,
       llmApiKey: state.llmApiKey,
+      llmModel: state.llmModel,
+      llmBaseUrl: state.llmBaseUrl,
     }),
   }
 )

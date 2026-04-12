@@ -41,11 +41,13 @@ func (h *Handler) GenerateDeck(
 
 	dynProvider := req.Header().Get("X-Llm-Provider")
 	dynKey := req.Header().Get("X-Llm-Api-Key")
+	dynModel := req.Header().Get("X-Llm-Model")
+	dynBaseUrl := req.Header().Get("X-Llm-Base-Url")
 
 	var provider llm.Provider
 	var err error
 	if dynProvider != "" {
-		provider, err = h.factory.GetDynamic(llm.ProviderName(dynProvider), dynKey)
+		provider, err = h.factory.GetDynamic(llm.ProviderName(dynProvider), dynKey, dynModel, dynBaseUrl)
 	} else {
 		provider, err = h.factory.Default()
 	}

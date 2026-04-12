@@ -47,6 +47,8 @@ export function SlideEditor() {
             "Connect-Protocol-Version": "1",
             "X-Llm-Provider": useDeckStore.getState().llmProvider || "anthropic",
             "X-Llm-Api-Key": useDeckStore.getState().llmApiKey || "",
+            "X-Llm-Model": useDeckStore.getState().llmModel || "",
+            "X-Llm-Base-Url": useDeckStore.getState().llmBaseUrl || "",
           },
           body: JSON.stringify({
             requestId: selectedSlide.requestId,

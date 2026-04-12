@@ -22,8 +22,11 @@ export function PromptInput() {
   const status = useDeckStore((s) => s.progress.status);
   const llmProvider = useDeckStore((s) => s.llmProvider);
   const llmApiKey = useDeckStore((s) => s.llmApiKey);
+  const llmModel = useDeckStore((s) => s.llmModel);
+  const llmBaseUrl = useDeckStore((s) => s.llmBaseUrl);
   const setLlmConfig = useDeckStore((s) => s.setLlmConfig);
   const isGenerating = status !== "idle" && status !== "completed" && status !== "error";
+  const progressMessage = useDeckStore((s) => s.progress.message);
 
   // Auto-resize textarea.
   useEffect(() => {
@@ -101,6 +104,17 @@ export function PromptInput() {
           </button>
         </div>
 
+        {/* Loading text status */}
+        {isGenerating && progressMessage && (
+          <div className="absolute -bottom-6 right-2 text-[11px] text-muted-foreground/80 flex items-center gap-1.5 animate-fade-in pointer-events-none">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary/80"></span>
+            </span>
+            {progressMessage}
+          </div>
+        )}
+
         {/* Expanded options panel */}
         {showOptions && (
           <div
@@ -172,7 +186,7 @@ export function PromptInput() {
                 <div className="col-span-1">
                   <select
                     value={llmProvider}
-                    onChange={(e) => setLlmConfig(e.target.value, llmApiKey)}
+                    onChange={(e) => setLlmConfig(e.target.value, llmApiKey, llmModel, llmBaseUrl)}
                     className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
                   >
                     <option value="anthropic">Anthropic</option>
@@ -180,13 +194,14 @@ export function PromptInput() {
                     <option value="gemini">Gemini</option>
                     <option value="xai">xAI</option>
                     <option value="minimax">Minimax</option>
+                    <option value="ollama">Ollama</option>
                   </select>
                 </div>
                 <div className="col-span-2 relative">
                   <input
                     type={showKey ? "text" : "password"}
                     value={llmApiKey}
-                    onChange={(e) => setLlmConfig(llmProvider, e.target.value)}
+                    onChange={(e) => setLlmConfig(llmProvider, e.target.value, llmModel, llmBaseUrl)}
                     placeholder="Enter API Key (saved locally)"
                     className="w-full text-sm rounded-lg border border-border/50 bg-background pl-3 pr-9 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
                   />
@@ -199,6 +214,26 @@ export function PromptInput() {
                     {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                 <div>
+                    <input
+                      type="text"
+                      value={llmBaseUrl}
+                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, llmModel, e.target.value)}
+                      placeholder="Custom API Base URL (e.g. http://localhost:11434/v1)"
+                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                 </div>
+                 <div>
+                    <input
+                      type="text"
+                      value={llmModel}
+                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, e.target.value, llmBaseUrl)}
+                      placeholder="Model Override (e.g. llama3)"
+                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                 </div>
               </div>
             </div>
           </div>

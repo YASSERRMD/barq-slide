@@ -94,7 +94,7 @@ func withCORS(allowOrigin string, next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers",
-			"Accept, Content-Type, Content-Length, Accept-Encoding, Connect-Protocol-Version, X-Request-ID, X-Llm-Provider, X-Llm-Api-Key")
+			"Accept, Content-Type, Content-Length, Accept-Encoding, Connect-Protocol-Version, X-Request-ID, X-Llm-Provider, X-Llm-Api-Key, X-Llm-Model, X-Llm-Base-Url")
 		w.Header().Set("Access-Control-Expose-Headers",
 			"Grpc-Status, Grpc-Message, Grpc-Status-Details-Bin")
 		if r.Method == http.MethodOptions {
