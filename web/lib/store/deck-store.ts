@@ -157,8 +157,8 @@ const initialProgress: GenerationProgress = {
 };
 
 export const useDeckStore = create<DeckState>()(
-  persist(
-    devtools(
+  devtools(
+    persist(
       (set) => ({
         llmProvider: "anthropic",
         llmApiKey: "",
@@ -173,105 +173,102 @@ export const useDeckStore = create<DeckState>()(
         selectedSlideIndex: 0,
         snapshotsById: {},
 
-      setRequestId: (id) => set({ requestId: id }),
+        setRequestId: (id) => set({ requestId: id }),
 
-      setProgress: (p) =>
-        set((state) => ({
-          progress: { ...state.progress, ...p },
-        })),
+        setProgress: (p) =>
+          set((state) => ({
+            progress: { ...state.progress, ...p },
+          })),
 
-      setPlan: (plan) => set({ plan }),
+        setPlan: (plan) => set({ plan }),
 
-      setTokens: (tokens) => set({ tokens }),
+        setTokens: (tokens) => set({ tokens }),
 
-      upsertSlide: (slide) =>
-        set((state) => {
-          const exists = slide.id in state.slidesById;
-          const slideOrder = exists
-            ? state.slideOrder
-            : [...state.slideOrder, slide.id];
-          return {
-            slidesById: { ...state.slidesById, [slide.id]: slide },
-            slideOrder,
-          };
-        }),
-
-      setSnapshot: (slideId, dataUrl) =>
-        set((state) => ({
-          snapshotsById: { ...state.snapshotsById, [slideId]: dataUrl },
-        })),
-
-      setSelectedSlideIndex: (index) => set({ selectedSlideIndex: index }),
-
-      setCompleted: (slides) => {
-        const slidesById: Record<string, SlideNode> = {};
-        const slideOrder: string[] = [];
-        slides.forEach((s) => {
-          slidesById[s.id] = s;
-          slideOrder.push(s.id);
-        });
-        set({
-          slidesById,
-          slideOrder,
-          progress: { status: "completed", message: "Deck ready", progressPct: 100 },
-        });
-      },
-
-      updateBlockText: (slideId, blockId, blockIndex, text) =>
-        set((state) => {
-          const slide = state.slidesById[slideId];
-          if (!slide) return state;
-
-          // Deep copy the blocks array and the specific block to maintain immutability.
-          const newBlocks = [...slide.blocks];
-          
-          // Find the block either by ID or Index.
-          let targetIndex = -1;
-          if (blockId) {
-            targetIndex = newBlocks.findIndex((b) => b.id === blockId);
-          }
-          if (targetIndex === -1) {
-            targetIndex = blockIndex;
-          }
-
-          if (targetIndex >= 0 && targetIndex < newBlocks.length) {
-            newBlocks[targetIndex] = { ...newBlocks[targetIndex], text };
-            
+        upsertSlide: (slide) =>
+          set((state) => {
+            const exists = slide.id in state.slidesById;
+            const slideOrder = exists
+              ? state.slideOrder
+              : [...state.slideOrder, slide.id];
             return {
-              slidesById: {
-                ...state.slidesById,
-                [slideId]: { ...slide, blocks: newBlocks },
-              },
+              slidesById: { ...state.slidesById, [slide.id]: slide },
+              slideOrder,
             };
-          }
-          return state;
-        }),
+          }),
 
-      setLlmConfig: (provider, apiKey, model, baseUrl) =>
-        set({ llmProvider: provider, llmApiKey: apiKey, llmModel: model, llmBaseUrl: baseUrl }),
-      reset: () =>
-        set((state) => ({
-          requestId: null,
-          progress: initialProgress,
-          plan: null,
-          tokens: null,
-          slidesById: {},
-          slideOrder: [],
-          selectedSlideIndex: 0,
-          snapshotsById: {},
-          // We intentionally do not reset llmProvider and llmApiKey here
-        })),
-    }),
+        setSnapshot: (slideId, dataUrl) =>
+          set((state) => ({
+            snapshotsById: { ...state.snapshotsById, [slideId]: dataUrl },
+          })),
+
+        setSelectedSlideIndex: (index) => set({ selectedSlideIndex: index }),
+
+        setCompleted: (slides) => {
+          const slidesById: Record<string, SlideNode> = {};
+          const slideOrder: string[] = [];
+          slides.forEach((s) => {
+            slidesById[s.id] = s;
+            slideOrder.push(s.id);
+          });
+          set({
+            slidesById,
+            slideOrder,
+            progress: { status: "completed", message: "Deck ready", progressPct: 100 },
+          });
+        },
+
+        updateBlockText: (slideId, blockId, blockIndex, text) =>
+          set((state) => {
+            const slide = state.slidesById[slideId];
+            if (!slide) return state;
+
+            const newBlocks = [...slide.blocks];
+
+            let targetIndex = -1;
+            if (blockId) {
+              targetIndex = newBlocks.findIndex((b) => b.id === blockId);
+            }
+            if (targetIndex === -1) {
+              targetIndex = blockIndex;
+            }
+
+            if (targetIndex >= 0 && targetIndex < newBlocks.length) {
+              newBlocks[targetIndex] = { ...newBlocks[targetIndex], text };
+              return {
+                slidesById: {
+                  ...state.slidesById,
+                  [slideId]: { ...slide, blocks: newBlocks },
+                },
+              };
+            }
+            return state;
+          }),
+
+        setLlmConfig: (provider, apiKey, model, baseUrl) =>
+          set({ llmProvider: provider, llmApiKey: apiKey, llmModel: model, llmBaseUrl: baseUrl }),
+
+        reset: () =>
+          set(() => ({
+            requestId: null,
+            progress: initialProgress,
+            plan: null,
+            tokens: null,
+            slidesById: {},
+            slideOrder: [],
+            selectedSlideIndex: 0,
+            snapshotsById: {},
+          })),
+      }),
+      {
+        name: "barq-llm-config",
+        partialize: (state) => ({
+          llmProvider: state.llmProvider,
+          llmApiKey: state.llmApiKey,
+          llmModel: state.llmModel,
+          llmBaseUrl: state.llmBaseUrl,
+        }),
+      }
+    ),
     { name: "deck-store-dev" }
-  ),
-  {
-    name: "barq-llm-config",
-    partialize: (state) => ({
-      llmProvider: state.llmProvider,
-      llmApiKey: state.llmApiKey,
-      llmModel: state.llmModel,
-      llmBaseUrl: state.llmBaseUrl,
-    }),
-  }
-)
+  )
 );
