@@ -2,6 +2,8 @@
 
 import { PromptInput } from "@/components/prompt-input";
 import { TerminalProgress } from "@/components/terminal-progress";
+import { SlideEditor } from "@/components/slide-editor";
+import { DownloadPPTX } from "@/components/download-pptx";
 import { useDeckStore } from "@/lib/store/deck-store";
 import { Zap } from "lucide-react";
 
@@ -33,12 +35,19 @@ export default function HomePage() {
       {/* Terminal Progress */}
       <TerminalProgress />
 
-      {/* Slide count badge */}
+      {/* Slide count badge + Download */}
       {isActive && slideCount > 0 && (
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-medium animate-fade-in">
-          {slideCount} slide{slideCount !== 1 ? "s" : ""} generated
+        <div className="flex items-center gap-4 animate-fade-in">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-medium">
+            {slideCount} slide{slideCount !== 1 ? "s" : ""} generated
+          </div>
+          <DownloadPPTX />
         </div>
       )}
+
+      {/* Slide Editor */}
+      <SlideEditor />
     </main>
   );
 }
+
