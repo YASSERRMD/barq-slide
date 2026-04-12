@@ -42,9 +42,24 @@ func (f *Factory) Get(name ProviderName) (Provider, error) {
 }
 
 // GetDynamic returns a Provider by name, substituting the API key, model and base URL at runtime.
+// If provider is "anthropic" but a custom baseUrl is provided, it is treated as an
+// OpenAI-compatible endpoint (e.g. z.ai, GLM, etc.) and routed through the OpenAI adapter.
 func (f *Factory) GetDynamic(name ProviderName, apiKey, model, baseUrl string) (Provider, error) {
 	switch name {
 	case ProviderAnthropic, "":
+		// If a custom base URL is set, it's an OpenAI-compatible provider — not native Anthropic.
+		if baseUrl != "" {
+			reqModel := model
+			if reqModel == "" { reqModel = "gpt-4o" }
+			return NewOpenAICompatAdapter(ProviderOpenAI, Config{
+				Provider:    ProviderOpenAI,
+				APIKey:      apiKey,
+				BaseURL:     baseUrl,
+				Model:       reqModel,
+				MaxTokens:   defaultOpenAIMaxTokens,
+				Temperature: defaultOpenAITemperature,
+			})
+		}
 		reqModel := f.cfg.LLM.Anthropic.Model
 		if model != "" { reqModel = model }
 		return NewAnthropicAdapter(Config{
