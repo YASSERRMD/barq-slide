@@ -17,6 +17,7 @@ const (
 	ProviderOpenAI    ProviderName = "openai"
 	ProviderXAI       ProviderName = "xai"
 	ProviderMinimax   ProviderName = "minimax"
+	ProviderOllama    ProviderName = "ollama"
 )
 
 // Config holds provider-level configuration.

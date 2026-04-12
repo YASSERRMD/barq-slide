@@ -1,5 +1,5 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates
 
@@ -25,14 +25,14 @@ COPY assets/ /app/assets/
 USER barq
 WORKDIR /app
 
-EXPOSE 8080
+EXPOSE 8090
 
 ENV BARQ_SERVER__HOST=0.0.0.0 \
-    BARQ_SERVER__PORT=8080 \
+    BARQ_SERVER__PORT=8090 \
     BARQ_LOG__LEVEL=info \
     BARQ_LOG__FORMAT=json
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:8080/healthz || exit 1
+    CMD wget -qO- http://localhost:8090/healthz || exit 1
 
 ENTRYPOINT ["barq-server"]

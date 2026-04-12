@@ -35,7 +35,7 @@ export function SlideEditor() {
     setIsRegenerating(true);
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
 
     try {
       const res = await fetch(
@@ -45,6 +45,10 @@ export function SlideEditor() {
           headers: {
             "Content-Type": "application/json",
             "Connect-Protocol-Version": "1",
+            "X-Llm-Provider": useDeckStore.getState().llmProvider || "anthropic",
+            "X-Llm-Api-Key": useDeckStore.getState().llmApiKey || "",
+            "X-Llm-Model": useDeckStore.getState().llmModel || "",
+            "X-Llm-Base-Url": useDeckStore.getState().llmBaseUrl || "",
           },
           body: JSON.stringify({
             requestId: selectedSlide.requestId,

@@ -10,6 +10,8 @@ export const metadata: Metadata = {
     "Next-gen AI presentation engine with dual-render architecture: real-time HTML preview and native PPTX export.",
 };
 
+import { Navigation } from "@/components/navigation";
+
 export default function RootLayout({
   children,
 }: {
@@ -17,7 +19,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <Navigation />
+        <div className="pt-14">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

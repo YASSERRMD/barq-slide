@@ -71,14 +71,20 @@ export function useGenerateDeck() {
     });
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
 
     try {
       const res = await fetch(`${baseUrl}${GENERATE_DECK_PATH}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          // Connect server-streaming requires application/connect+json, NOT application/json.
+          // application/json is only valid for unary RPCs.
+          "Content-Type": "application/connect+json",
           "Connect-Protocol-Version": "1",
+          "X-Llm-Provider": store().llmProvider || "anthropic",
+          "X-Llm-Api-Key": store().llmApiKey || "",
+          "X-Llm-Model": store().llmModel || "",
+          "X-Llm-Base-Url": store().llmBaseUrl || "",
         },
         body: JSON.stringify({
           intent: {

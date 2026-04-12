@@ -19,13 +19,13 @@ import (
 // Handler implements barqv1.HeliosServiceHandler.
 type Handler struct {
 	barqv1.UnimplementedHeliosServiceHandler
-	log      *slog.Logger
-	provider llm.Provider
+	log     *slog.Logger
+	factory *llm.Factory
 }
 
 // New creates a new Handler.
-func New(log *slog.Logger, provider llm.Provider) *Handler {
-	return &Handler{log: log, provider: provider}
+func New(log *slog.Logger, factory *llm.Factory) *Handler {
+	return &Handler{log: log, factory: factory}
 }
 
 // GenerateDeck streams the full deck generation pipeline.
@@ -41,8 +41,24 @@ func (h *Handler) GenerateDeck(
 	)
 	log.Info("deck generation started")
 
+	dynProvider := req.Header().Get("X-Llm-Provider")
+	dynKey := req.Header().Get("X-Llm-Api-Key")
+	dynModel := req.Header().Get("X-Llm-Model")
+	dynBaseUrl := req.Header().Get("X-Llm-Base-Url")
+
+	var provider llm.Provider
+	var err error
+	if dynProvider != "" {
+		provider, err = h.factory.GetDynamic(llm.ProviderName(dynProvider), dynKey, dynModel, dynBaseUrl)
+	} else {
+		provider, err = h.factory.Default()
+	}
+	if err != nil {
+		return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid llm configuration: %w", err))
+	}
+
 	cfg := pipeline.Config{
-		LLMProvider: h.provider,
+		LLMProvider: provider,
 		Log:         log,
 	}
 

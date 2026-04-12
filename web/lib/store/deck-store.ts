@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 
 // ── Minimal TS mirrors of the proto types (until buf generates TypeScript) ────
 
@@ -103,6 +103,14 @@ export interface GenerationProgress {
 // ── Zustand store ─────────────────────────────────────────────────────────────
 
 export interface DeckState {
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  llmProvider: string;
+  llmApiKey: string;
+  llmModel: string;
+  llmBaseUrl: string;
+
+  // ── Generation State ─────────────────────────────────────────────────────────
+
   // Current active request ID.
   requestId: string | null;
 
@@ -138,6 +146,7 @@ export interface DeckState {
   setSelectedSlideIndex: (index: number) => void;
   setCompleted: (slides: SlideNode[]) => void;
   updateBlockText: (slideId: string, blockId: string, blockIndex: number, text: string) => void;
+  setLlmConfig: (provider: string, apiKey: string, model: string, baseUrl: string) => void;
   reset: () => void;
 }
 
@@ -148,16 +157,21 @@ const initialProgress: GenerationProgress = {
 };
 
 export const useDeckStore = create<DeckState>()(
-  devtools(
-    (set) => ({
-      requestId: null,
-      progress: initialProgress,
-      plan: null,
-      tokens: null,
-      slidesById: {},
-      slideOrder: [],
-      selectedSlideIndex: 0,
-      snapshotsById: {},
+  persist(
+    devtools(
+      (set) => ({
+        llmProvider: "anthropic",
+        llmApiKey: "",
+        llmModel: "",
+        llmBaseUrl: "",
+        requestId: null,
+        progress: initialProgress,
+        plan: null,
+        tokens: null,
+        slidesById: {},
+        slideOrder: [],
+        selectedSlideIndex: 0,
+        snapshotsById: {},
 
       setRequestId: (id) => set({ requestId: id }),
 
@@ -233,8 +247,10 @@ export const useDeckStore = create<DeckState>()(
           return state;
         }),
 
+      setLlmConfig: (provider, apiKey, model, baseUrl) =>
+        set({ llmProvider: provider, llmApiKey: apiKey, llmModel: model, llmBaseUrl: baseUrl }),
       reset: () =>
-        set({
+        set((state) => ({
           requestId: null,
           progress: initialProgress,
           plan: null,
@@ -243,8 +259,19 @@ export const useDeckStore = create<DeckState>()(
           slideOrder: [],
           selectedSlideIndex: 0,
           snapshotsById: {},
-        }),
+          // We intentionally do not reset llmProvider and llmApiKey here
+        })),
     }),
-    { name: "deck-store" }
-  )
+    { name: "deck-store-dev" }
+  ),
+  {
+    name: "barq-llm-config",
+    partialize: (state) => ({
+      llmProvider: state.llmProvider,
+      llmApiKey: state.llmApiKey,
+      llmModel: state.llmModel,
+      llmBaseUrl: state.llmBaseUrl,
+    }),
+  }
+)
 );

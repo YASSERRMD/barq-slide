@@ -41,6 +41,86 @@ func (f *Factory) Get(name ProviderName) (Provider, error) {
 	}
 }
 
+// GetDynamic returns a Provider by name, substituting the API key, model and base URL at runtime.
+func (f *Factory) GetDynamic(name ProviderName, apiKey, model, baseUrl string) (Provider, error) {
+	switch name {
+	case ProviderAnthropic, "":
+		reqModel := f.cfg.LLM.Anthropic.Model
+		if model != "" { reqModel = model }
+		return NewAnthropicAdapter(Config{
+			Provider:    ProviderAnthropic,
+			APIKey:      apiKey,
+			Model:       reqModel,
+			MaxTokens:   defaultAnthropicMaxTokens,
+			Temperature: defaultAnthropicTemperature,
+		})
+	case ProviderGemini:
+		reqModel := f.cfg.LLM.Gemini.Model
+		if model != "" { reqModel = model }
+		return NewGeminiAdapter(Config{
+			Provider:    ProviderGemini,
+			APIKey:      apiKey,
+			Model:       reqModel,
+			MaxTokens:   defaultGeminiMaxTokens,
+			Temperature: defaultGeminiTemperature,
+		})
+	case ProviderOpenAI:
+		reqModel := f.cfg.LLM.OpenAI.Model
+		if model != "" { reqModel = model }
+		reqBaseUrl := f.cfg.LLM.OpenAI.BaseURL
+		if baseUrl != "" { reqBaseUrl = baseUrl }
+		return NewOpenAICompatAdapter(ProviderOpenAI, Config{
+			Provider:    ProviderOpenAI,
+			APIKey:      apiKey,
+			BaseURL:     reqBaseUrl,
+			Model:       reqModel,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	case ProviderXAI:
+		reqModel := f.cfg.LLM.XAI.Model
+		if model != "" { reqModel = model }
+		reqBaseUrl := f.cfg.LLM.XAI.BaseURL
+		if baseUrl != "" { reqBaseUrl = baseUrl }
+		return NewOpenAICompatAdapter(ProviderXAI, Config{
+			Provider:    ProviderXAI,
+			APIKey:      apiKey,
+			BaseURL:     reqBaseUrl,
+			Model:       reqModel,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	case ProviderMinimax:
+		reqModel := f.cfg.LLM.Minimax.Model
+		if model != "" { reqModel = model }
+		reqBaseUrl := f.cfg.LLM.Minimax.BaseURL
+		if baseUrl != "" { reqBaseUrl = baseUrl }
+		return NewOpenAICompatAdapter(ProviderMinimax, Config{
+			Provider:    ProviderMinimax,
+			APIKey:      apiKey,
+			BaseURL:     reqBaseUrl,
+			Model:       reqModel,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	case ProviderOllama:
+		reqModel := "llama3"
+		if model != "" { reqModel = model }
+		reqBaseUrl := "http://localhost:11434/v1"
+		if baseUrl != "" { reqBaseUrl = baseUrl }
+		return NewOpenAICompatAdapter(ProviderOllama, Config{
+			Provider:    ProviderOllama,
+			APIKey:      apiKey, // Ollama technically doesn't need an API key usually, but handles it.
+			BaseURL:     reqBaseUrl,
+			Model:       reqModel,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	default:
+		return nil, fmt.Errorf("llm factory (dynamic): unknown provider %q", name)
+	}
+}
+
 func (f *Factory) anthropic() (Provider, error) {
 	return NewAnthropicAdapter(Config{
 		Provider:    ProviderAnthropic,

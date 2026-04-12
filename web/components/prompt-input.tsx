@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Send, Sparkles, ChevronDown } from "lucide-react";
 import { useGenerateDeck } from "@/lib/store/use-generate-deck";
 import { useDeckStore } from "@/lib/store/deck-store";
+import { Eye, EyeOff } from "lucide-react";
 
 const TONE_OPTIONS = ["professional", "conversational", "academic", "bold", "minimal"] as const;
 const AUDIENCE_OPTIONS = ["executives", "team", "investors", "students", "general"] as const;
@@ -13,12 +14,19 @@ export function PromptInput() {
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState("");
   const [showOptions, setShowOptions] = useState(false);
+  const [showKey, setShowKey] = useState(false);
   const [slideCount, setSlideCount] = useState(10);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const generate = useGenerateDeck();
   const status = useDeckStore((s) => s.progress.status);
+  const llmProvider = useDeckStore((s) => s.llmProvider);
+  const llmApiKey = useDeckStore((s) => s.llmApiKey);
+  const llmModel = useDeckStore((s) => s.llmModel);
+  const llmBaseUrl = useDeckStore((s) => s.llmBaseUrl);
+  const setLlmConfig = useDeckStore((s) => s.setLlmConfig);
   const isGenerating = status !== "idle" && status !== "completed" && status !== "error";
+  const progressMessage = useDeckStore((s) => s.progress.message);
 
   // Auto-resize textarea.
   useEffect(() => {
@@ -96,6 +104,17 @@ export function PromptInput() {
           </button>
         </div>
 
+        {/* Loading text status */}
+        {isGenerating && progressMessage && (
+          <div className="absolute -bottom-6 right-2 text-[11px] text-muted-foreground/80 flex items-center gap-1.5 animate-fade-in pointer-events-none">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary/80"></span>
+            </span>
+            {progressMessage}
+          </div>
+        )}
+
         {/* Expanded options panel */}
         {showOptions && (
           <div
@@ -158,6 +177,7 @@ export function PromptInput() {
                 <span>30</span>
               </div>
             </div>
+
           </div>
         )}
       </div>
