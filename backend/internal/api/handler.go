@@ -9,18 +9,21 @@ import (
 	"connectrpc.com/connect"
 
 	barqv1 "github.com/YASSERRMD/barq-slides/gen/barq/v1"
+	"github.com/YASSERRMD/barq-slides/internal/llm"
 	"github.com/YASSERRMD/barq-slides/internal/logger"
+	"github.com/YASSERRMD/barq-slides/internal/pipeline"
 )
 
 // Handler implements barqv1.HeliosServiceHandler.
 type Handler struct {
 	barqv1.UnimplementedHeliosServiceHandler
-	log *slog.Logger
+	log      *slog.Logger
+	provider llm.Provider
 }
 
 // New creates a new Handler.
-func New(log *slog.Logger) *Handler {
-	return &Handler{log: log}
+func New(log *slog.Logger, provider llm.Provider) *Handler {
+	return &Handler{log: log, provider: provider}
 }
 
 // GenerateDeck streams the full deck generation pipeline.
@@ -29,22 +32,24 @@ func (h *Handler) GenerateDeck(
 	req *connect.Request[barqv1.GenerateDeckRequest],
 	stream *connect.ServerStream[barqv1.GenerateStreamResponse],
 ) error {
+	spec := req.Msg.GetIntent()
 	log := logger.FromContext(ctx).With(
-		slog.String("request_id", req.Msg.Intent.GetRequestID()),
+		slog.String("request_id", spec.GetRequestID()),
 		slog.String("method", "GenerateDeck"),
 	)
 	log.Info("deck generation started")
 
-	if err := stream.Send(&barqv1.GenerateStreamResponse{
-		RequestID:   req.Msg.Intent.GetRequestID(),
-		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_STARTED,
-		Message:     "Generation started",
-		ProgressPct: 0,
-	}); err != nil {
-		return fmt.Errorf("sending start event: %w", err)
+	cfg := pipeline.Config{
+		LLMProvider: h.provider,
+		Log:         log,
 	}
 
-	// Pipeline execution wired in Phase 22.
+	for ev := range pipeline.Run(ctx, spec, cfg) {
+		if err := streamEvent(stream, ev); err != nil {
+			return fmt.Errorf("sending stream event: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -58,7 +63,7 @@ func (h *Handler) RegenerateSlide(
 		slog.String("request_id", req.Msg.GetRequestID()),
 		slog.String("slide_id", req.Msg.GetSlideID()),
 	)
-	return connect.NewError(connect.CodeUnimplemented, fmt.Errorf("wired in phase 22"))
+	return connect.NewError(connect.CodeUnimplemented, fmt.Errorf("slide regeneration coming soon"))
 }
 
 // ExportDeck exports a completed deck as a chunked PPTX/PDF stream.
@@ -71,7 +76,7 @@ func (h *Handler) ExportDeck(
 		slog.String("request_id", req.Msg.GetRequestID()),
 		slog.String("format", req.Msg.GetFormat()),
 	)
-	return connect.NewError(connect.CodeUnimplemented, fmt.Errorf("wired in phase 22"))
+	return connect.NewError(connect.CodeUnimplemented, fmt.Errorf("export coming soon"))
 }
 
 // GetDeckPlan returns the deck plan for a completed or in-progress request.
@@ -82,5 +87,5 @@ func (h *Handler) GetDeckPlan(
 	logger.FromContext(ctx).Info("get deck plan",
 		slog.String("request_id", req.Msg.GetRequestID()),
 	)
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("wired in phase 22"))
+	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("deck plan lookup coming soon"))
 }
