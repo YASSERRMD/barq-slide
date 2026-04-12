@@ -77,7 +77,9 @@ export function useGenerateDeck() {
       const res = await fetch(`${baseUrl}${GENERATE_DECK_PATH}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          // Connect server-streaming requires application/connect+json, NOT application/json.
+          // application/json is only valid for unary RPCs.
+          "Content-Type": "application/connect+json",
           "Connect-Protocol-Version": "1",
           "X-Llm-Provider": store().llmProvider || "anthropic",
           "X-Llm-Api-Key": store().llmApiKey || "",

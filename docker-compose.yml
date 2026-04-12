@@ -10,7 +10,7 @@ services:
     environment:
       BARQ_SERVER__HOST: "0.0.0.0"
       BARQ_SERVER__PORT: "8090"
-      BARQ_SERVER__CORS_ALLOW_ORIGIN: "http://localhost:3010"
+      BARQ_SERVER__CORS_ALLOW_ORIGIN: "*"
       BARQ_LLM__DEFAULT_PROVIDER: "anthropic"
       BARQ_LLM__ANTHROPIC__API_KEY: "${ANTHROPIC_API_KEY:-sk-ant-mock-key-for-local-demo}"
       BARQ_LLM__ANTHROPIC__MODEL: "claude-opus-4-6"

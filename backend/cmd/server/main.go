@@ -89,14 +89,33 @@ func healthHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // withCORS adds permissive CORS headers required by browser ConnectRPC clients.
+// Connect protocol requires application/connect+json content-type for streaming
+// and specific headers for the Connect envelope protocol.
 func withCORS(allowOrigin string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+		origin := r.Header.Get("Origin")
+		// Allow the configured origin or any origin if allowOrigin is "*".
+		if allowOrigin == "*" || origin == allowOrigin {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else if allowOrigin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		// All headers required by the Connect protocol (unary + streaming).
 		w.Header().Set("Access-Control-Allow-Headers",
-			"Accept, Content-Type, Content-Length, Accept-Encoding, Connect-Protocol-Version, X-Request-ID, X-Llm-Provider, X-Llm-Api-Key, X-Llm-Model, X-Llm-Base-Url")
+			"Accept, Content-Type, Content-Length, Accept-Encoding, "+
+				"Connect-Protocol-Version, Connect-Timeout-Ms, "+
+				"Connect-Accept-Encoding, Connect-Content-Encoding, "+
+				"Grpc-Timeout, X-Grpc-Web, X-User-Agent, "+
+				"X-Request-ID, X-Llm-Provider, X-Llm-Api-Key, X-Llm-Model, X-Llm-Base-Url")
+		// Expose Connect trailer headers so the browser can read them.
 		w.Header().Set("Access-Control-Expose-Headers",
-			"Grpc-Status, Grpc-Message, Grpc-Status-Details-Bin")
+			"Connect-Content-Encoding, Grpc-Status, Grpc-Message, "+
+				"Grpc-Status-Details-Bin, Trailer, Trailers")
+		w.Header().Set("Access-Control-Max-Age", "7200")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
