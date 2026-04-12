@@ -178,64 +178,6 @@ export function PromptInput() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border/30 mt-2">
-              <label className="text-xs font-semibold text-foreground mb-2 block">
-                LLM Configuration
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
-                  <select
-                    value={llmProvider}
-                    onChange={(e) => setLlmConfig(e.target.value, llmApiKey, llmModel, llmBaseUrl)}
-                    className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                  >
-                    <option value="anthropic">Anthropic</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="gemini">Gemini</option>
-                    <option value="xai">xAI</option>
-                    <option value="minimax">Minimax</option>
-                    <option value="ollama">Ollama</option>
-                  </select>
-                </div>
-                <div className="col-span-2 relative">
-                  <input
-                    type={showKey ? "text" : "password"}
-                    value={llmApiKey}
-                    onChange={(e) => setLlmConfig(llmProvider, e.target.value, llmModel, llmBaseUrl)}
-                    placeholder="Enter API Key (saved locally)"
-                    className="w-full text-sm rounded-lg border border-border/50 bg-background pl-3 pr-9 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey(!showKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    title={showKey ? "Hide key" : "Show key"}
-                  >
-                    {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                 <div>
-                    <input
-                      type="text"
-                      value={llmBaseUrl}
-                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, llmModel, e.target.value)}
-                      placeholder="Custom API Base URL (e.g. http://localhost:11434/v1)"
-                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                    />
-                 </div>
-                 <div>
-                    <input
-                      type="text"
-                      value={llmModel}
-                      onChange={(e) => setLlmConfig(llmProvider, llmApiKey, e.target.value, llmBaseUrl)}
-                      placeholder="Model Override (e.g. llama3)"
-                      className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
-                    />
-                 </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
