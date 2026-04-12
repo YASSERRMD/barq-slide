@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package barq.v1;
+
+option go_package = "github.com/YASSERRMD/barq-slides/gen/barq/v1;barqv1";
+
+import "google/protobuf/timestamp.proto";
+
+// IntentSpec captures the raw user intent for generating a presentation.
+message IntentSpec {
+  // Unique identifier for this generation request.
+  string request_id = 1;
+
+  // The raw user prompt describing the desired presentation.
+  string prompt = 2;
+
+  // Target audience descriptor (e.g., "C-suite executives", "engineering team").
+  string audience = 3;
+
+  // Presentation tone (e.g., "formal", "casual", "inspirational").
+  string tone = 4;
+
+  // Domain/industry context (e.g., "fintech", "healthcare", "education").
+  string domain = 5;
+
+  // Desired number of slides (0 = auto-determine).
+  int32 slide_count = 6;
+
+  // Desired language/locale for content (e.g., "en-US", "ar-SA").
+  string locale = 7;
+
+  // Optional data file bytes (XLSX, CSV) attached to the request.
+  bytes data_attachment = 8;
+
+  // MIME type of the data attachment (e.g., "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").
+  string data_attachment_mime = 9;
+
+  // LLM provider preference. Empty = auto-select.
+  string llm_provider = 10;
+
+  // LLM model name override. Empty = provider default.
+  string llm_model = 11;
+
+  // Request timestamp.
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// NarrativeArc describes the high-level story structure of the deck.
+enum NarrativeArc {
+  NARRATIVE_ARC_UNSPECIFIED = 0;
+  NARRATIVE_ARC_PROBLEM_SOLUTION = 1;
+  NARRATIVE_ARC_BEFORE_AFTER = 2;
+  NARRATIVE_ARC_DATA_STORY = 3;
+  NARRATIVE_ARC_PITCH = 4;
+  NARRATIVE_ARC_TUTORIAL = 5;
+  NARRATIVE_ARC_REPORT = 6;
+}
+
+// DeckPlan is the high-level plan produced by the AI planner from an IntentSpec.
+message DeckPlan {
+  // Derived from IntentSpec.request_id.
+  string request_id = 1;
+
+  // AI-generated deck title.
+  string title = 2;
+
+  // AI-generated subtitle / tagline.
+  string subtitle = 3;
+
+  // Narrative arc detected or assigned by the planner.
+  NarrativeArc arc = 4;
+
+  // Ordered list of sections in the deck.
+  repeated DeckSection sections = 5;
+
+  // Total slide count (sum of slides across all sections).
+  int32 total_slides = 6;
+
+  // Subject/topic tags used for theme classification.
+  repeated string topic_tags = 7;
+}
+
+// DeckSection groups a set of slides under a logical chapter.
+message DeckSection {
+  // Zero-based section index.
+  int32 index = 1;
+
+  // Section title shown on divider slides.
+  string title = 2;
+
+  // Ordered slide nodes within this section.
+  repeated string slide_ids = 3;
+}
