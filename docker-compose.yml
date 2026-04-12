@@ -28,9 +28,6 @@ services:
       retries: 3
     restart: unless-stopped
 
-volumes:
-  barq_data:
-
   web:
     build:
       context: ./web
@@ -45,3 +42,6 @@ volumes:
       backend:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  barq_data:
