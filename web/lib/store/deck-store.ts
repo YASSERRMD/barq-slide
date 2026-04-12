@@ -137,6 +137,7 @@ export interface DeckState {
   setSnapshot: (slideId: string, dataUrl: string) => void;
   setSelectedSlideIndex: (index: number) => void;
   setCompleted: (slides: SlideNode[]) => void;
+  updateBlockText: (slideId: string, blockId: string, blockIndex: number, text: string) => void;
   reset: () => void;
 }
 
@@ -201,6 +202,36 @@ export const useDeckStore = create<DeckState>()(
           progress: { status: "completed", message: "Deck ready", progressPct: 100 },
         });
       },
+
+      updateBlockText: (slideId, blockId, blockIndex, text) =>
+        set((state) => {
+          const slide = state.slidesById[slideId];
+          if (!slide) return state;
+
+          // Deep copy the blocks array and the specific block to maintain immutability.
+          const newBlocks = [...slide.blocks];
+          
+          // Find the block either by ID or Index.
+          let targetIndex = -1;
+          if (blockId) {
+            targetIndex = newBlocks.findIndex((b) => b.id === blockId);
+          }
+          if (targetIndex === -1) {
+            targetIndex = blockIndex;
+          }
+
+          if (targetIndex >= 0 && targetIndex < newBlocks.length) {
+            newBlocks[targetIndex] = { ...newBlocks[targetIndex], text };
+            
+            return {
+              slidesById: {
+                ...state.slidesById,
+                [slideId]: { ...slide, blocks: newBlocks },
+              },
+            };
+          }
+          return state;
+        }),
 
       reset: () =>
         set({

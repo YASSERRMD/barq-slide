@@ -74,7 +74,7 @@ func (p *Parser) Parse(ctx context.Context, spec *barqv1.IntentSpec) (*ParsedInt
 		return nil, fmt.Errorf("intent parser: empty prompt")
 	}
 
-	requestID := spec.GetRequestID()
+	requestID := spec.GetRequestId()
 	if requestID == "" {
 		requestID = uuid.NewString()
 	}

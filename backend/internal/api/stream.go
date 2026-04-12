@@ -19,7 +19,7 @@ func streamEvent(
 	ev pipeline.Event,
 ) error {
 	resp := &barqv1.GenerateStreamResponse{
-		RequestID:   ev.RequestID,
+		RequestId:   ev.RequestID,
 		Event:       ev.Event,
 		Message:     ev.Message,
 		ProgressPct: ev.ProgressPct,

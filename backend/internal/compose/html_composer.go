@@ -29,7 +29,7 @@ func NewHTMLComposer() *HTMLComposer { return &HTMLComposer{} }
 // Compose renders a SlideNode to a self-contained HTML string
 // suitable for browser rendering or chromedp screenshot.
 func (c *HTMLComposer) Compose(node *barqv1.SlideNode) (string, error) {
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 	tokens := node.GetTokens()
 
 	vars := buildCSSVars(tokens)
@@ -44,7 +44,7 @@ func (c *HTMLComposer) Compose(node *barqv1.SlideNode) (string, error) {
 		BackgroundHex: tokens.GetBackgroundHex(),
 		Regions:       regions,
 		ContentBlocks: contentBlocks,
-		SlideID:       node.GetID(),
+		SlideID:       node.GetId(),
 		SlideRole:     node.GetRole().String(),
 	}
 
@@ -348,7 +348,7 @@ func buildContentBlocks(node *barqv1.SlideNode, geo layout.Geometry) []contentBl
 	for _, b := range node.GetBlocks() {
 		if b.GetRole() == "heading" {
 			blocks = append(blocks, contentBlockData{
-				RegionID: fmt.Sprintf("title_%s", node.GetID()),
+				RegionID: fmt.Sprintf("title_%s", node.GetId()),
 				Role:     "title",
 				HTML: template.HTML(fmt.Sprintf(
 					`<div class="region-title" style="position:absolute;left:%dpx;top:%dpx;width:%dpx;height:%dpx;display:flex;align-items:center;"><h1>%s</h1></div>`,
@@ -374,7 +374,7 @@ func buildContentBlocks(node *barqv1.SlideNode, geo layout.Geometry) []contentBl
 			fmt.Fprintf(&items, "<li>%s</li>", template.HTMLEscapeString(bullet))
 		}
 		blocks = append(blocks, contentBlockData{
-			RegionID: fmt.Sprintf("body_%s", node.GetID()),
+			RegionID: fmt.Sprintf("body_%s", node.GetId()),
 			Role:     "body",
 			HTML: template.HTML(fmt.Sprintf(
 				`<div class="region-body" style="position:absolute;left:%dpx;top:%dpx;width:%dpx;height:%dpx;"><ul>%s</ul></div>`,
@@ -404,7 +404,7 @@ func buildContentBlocks(node *barqv1.SlideNode, geo layout.Geometry) []contentBl
 				)
 			}
 			blocks = append(blocks, contentBlockData{
-				RegionID: fmt.Sprintf("media_%s_%s", node.GetID(), asset.GetID()),
+				RegionID: fmt.Sprintf("media_%s_%s", node.GetId(), asset.GetId()),
 				Role:     "media",
 				HTML:     template.HTML(html), //nolint:gosec // controlled content
 			})

@@ -49,6 +49,12 @@ message ExportDeckRequest {
 
   // Export format: "pptx" (default) or "pdf".
   string format = 2;
+
+  // The full ordered list of slides (including any frontend edits).
+  repeated SlideNode slides = 3;
+
+  // The design tokens to apply to the exported deck.
+  DesignTokens tokens = 4;
 }
 
 // GetDeckPlanRequest fetches the plan for a request.

@@ -37,7 +37,7 @@ func AddSlide(prs *presentation.Presentation, node *barqv1.SlideNode, tokens *ba
 		_ = ph.Remove()
 	}
 
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 
 	// ── Heading text shape ──────────────────────────────────────────────────
 	for _, block := range node.GetBlocks() {

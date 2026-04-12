@@ -29,6 +29,12 @@ export function DownloadPPTX() {
       process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
     try {
+      // Build the active slide payload preserving order.
+      const slidesPayload = useDeckStore.getState().slideOrder
+        .map(id => useDeckStore.getState().slidesById[id])
+        .filter(Boolean);
+      const tokensPayload = useDeckStore.getState().tokens;
+
       const res = await fetch(
         `${baseUrl}/barq.v1.HeliosService/ExportDeck`,
         {
@@ -40,6 +46,8 @@ export function DownloadPPTX() {
           body: JSON.stringify({
             requestId,
             format: "pptx",
+            slides: slidesPayload,
+            tokens: tokensPayload,
           }),
         }
       );
