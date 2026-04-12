@@ -35,6 +35,10 @@ export function DownloadPPTX() {
         .filter(Boolean);
       const tokensPayload = useDeckStore.getState().tokens;
 
+      // Protobuf v2 uses BigInt for int64 fields — JSON.stringify crashes on them.
+      const safeStringify = (v: unknown) =>
+        JSON.stringify(v, (_, val) => (typeof val === "bigint" ? Number(val) : val));
+
       const res = await fetch(
         `${baseUrl}/barq.v1.HeliosService/ExportDeck`,
         {
@@ -43,7 +47,7 @@ export function DownloadPPTX() {
             "Content-Type": "application/json",
             "Connect-Protocol-Version": "1",
           },
-          body: JSON.stringify({
+          body: safeStringify({
             requestId,
             format: "pptx",
             slides: slidesPayload,
