@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package barq.v1;
+
+option go_package = "github.com/YASSERRMD/barq-slides/gen/barq/v1;barqv1";
+
+import "barq/v1/intent.proto";
+import "barq/v1/slide.proto";
+import "google/protobuf/timestamp.proto";
+
+// HeliosService is the primary gRPC/ConnectRPC service for barq-slides.
+service HeliosService {
+  // GenerateDeck streams the full deck generation pipeline.
+  // The client sends one IntentSpec and receives a stream of GenerateStreamResponse events.
+  rpc GenerateDeck(GenerateDeckRequest) returns (stream GenerateStreamResponse);
+
+  // RegenerateSlide regenerates a single slide given updated instructions.
+  rpc RegenerateSlide(RegenerateSlideRequest) returns (stream GenerateStreamResponse);
+
+  // ExportDeck exports a completed deck to a .pptx binary stream.
+  rpc ExportDeck(ExportDeckRequest) returns (stream ExportChunkResponse);
+
+  // GetDeckPlan returns the high-level plan for an in-progress or completed request.
+  rpc GetDeckPlan(GetDeckPlanRequest) returns (GetDeckPlanResponse);
+}
+
+// ── Request messages ──────────────────────────────────────────────────────────
+
+// GenerateDeckRequest wraps the IntentSpec for streaming generation.
+message GenerateDeckRequest {
+  IntentSpec intent = 1;
+}
+
+// RegenerateSlideRequest asks to regenerate a specific slide.
+message RegenerateSlideRequest {
+  // The original request ID for the deck context.
+  string request_id = 1;
+
+  // The slide ID to regenerate.
+  string slide_id = 2;
+
+  // Optional override instructions from the user.
+  string instruction = 3;
+}
+
+// ExportDeckRequest asks to export a completed deck.
+message ExportDeckRequest {
+  string request_id = 1;
+
+  // Export format: "pptx" (default) or "pdf".
+  string format = 2;
+}
+
+// GetDeckPlanRequest fetches the plan for a request.
+message GetDeckPlanRequest {
+  string request_id = 1;
+}
+
+// ── Response messages ─────────────────────────────────────────────────────────
+
+// GenerateStreamEvent enumerates the event types in the generation stream.
+enum GenerateStreamEvent {
+  GENERATE_STREAM_EVENT_UNSPECIFIED = 0;
+  GENERATE_STREAM_EVENT_STARTED = 1;
+  GENERATE_STREAM_EVENT_PLAN_READY = 2;
+  GENERATE_STREAM_EVENT_TOKENS_READY = 3;
+  GENERATE_STREAM_EVENT_SLIDE_STARTED = 4;
+  GENERATE_STREAM_EVENT_SLIDE_READY = 5;
+  GENERATE_STREAM_EVENT_ASSET_READY = 6;
+  GENERATE_STREAM_EVENT_SNAPSHOT_READY = 7;
+  GENERATE_STREAM_EVENT_COMPLETED = 8;
+  GENERATE_STREAM_EVENT_ERROR = 9;
+}
+
+// GenerateStreamResponse is the server-streaming response for deck generation.
+message GenerateStreamResponse {
+  // The request this response belongs to.
+  string request_id = 1;
+
+  // Event type.
+  GenerateStreamEvent event = 2;
+
+  // Human-readable progress message.
+  string message = 3;
+
+  // Zero-based progress (0–100).
+  int32 progress_pct = 4;
+
+  // Populated on PLAN_READY.
+  DeckPlan plan = 5;
+
+  // Populated on TOKENS_READY.
+  DesignTokens tokens = 6;
+
+  // Populated on SLIDE_READY.
+  SlideNode slide = 7;
+
+  // Populated on SNAPSHOT_READY: PNG screenshot of the rendered HTML slide.
+  bytes snapshot_png = 8;
+
+  // Populated on COMPLETED: full ordered list of finished slides.
+  repeated SlideNode slides = 9;
+
+  // Populated on ERROR.
+  string error_message = 10;
+  string error_code = 11;
+
+  // Server timestamp.
+  google.protobuf.Timestamp timestamp = 12;
+}
+
+// ExportChunkResponse streams chunks of the exported file.
+message ExportChunkResponse {
+  // Total file size in bytes (sent in the first chunk).
+  int64 total_bytes = 1;
+
+  // Offset of this chunk.
+  int64 offset = 2;
+
+  // Raw bytes for this chunk.
+  bytes data = 3;
+
+  // True if this is the last chunk.
+  bool is_last = 4;
+
+  // Suggested filename (sent in first chunk).
+  string filename = 5;
+}
+
+// GetDeckPlanResponse returns the deck plan.
+message GetDeckPlanResponse {
+  DeckPlan plan = 1;
+  DesignTokens tokens = 2;
+}

@@ -1,0 +1,22 @@
+version: v2
+
+modules:
+  - path: proto
+
+deps:
+  - buf.build/googleapis/googleapis
+
+lint:
+  use:
+    - DEFAULT
+  except:
+    - FIELD_LOWER_SNAKE_CASE  # allow acronyms like emu_x/emu_y
+  ignore_only:
+    PACKAGE_DIRECTORY_MATCH:
+      - proto/barq/v1/intent.proto
+      - proto/barq/v1/slide.proto
+      - proto/barq/v1/service.proto
+
+breaking:
+  use:
+    - FILE

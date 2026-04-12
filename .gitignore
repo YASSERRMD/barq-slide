@@ -24,8 +24,8 @@ web/.env
 web/.env.local
 web/.env.*.local
 
-# Generated protobuf stubs
-backend/gen/
+# Generated protobuf stubs (tracked - hand-written until buf is wired in CI)
+# backend/gen/
 web/src/gen/
 
 # Environment
