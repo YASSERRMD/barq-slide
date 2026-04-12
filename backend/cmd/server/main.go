@@ -16,6 +16,7 @@ import (
 	barqv1 "github.com/YASSERRMD/barq-slides/gen/barq/v1"
 	"github.com/YASSERRMD/barq-slides/internal/api"
 	"github.com/YASSERRMD/barq-slides/internal/config"
+	"github.com/YASSERRMD/barq-slides/internal/llm"
 	"github.com/YASSERRMD/barq-slides/internal/logger"
 )
 
@@ -33,7 +34,14 @@ func main() {
 		"provider", cfg.LLM.DefaultProvider,
 	)
 
-	handler := api.New(log)
+	factory := llm.NewFactory(cfg)
+	provider, err := factory.Default()
+	if err != nil {
+		log.Error("failed to create LLM provider", "error", err)
+		os.Exit(1)
+	}
+
+	handler := api.New(log, provider)
 	path, svcHandler := barqv1.NewHeliosServiceHandler(handler)
 
 	mux := http.NewServeMux()
