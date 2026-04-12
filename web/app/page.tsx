@@ -1,7 +1,6 @@
 "use client";
 
 import { PromptInput } from "@/components/prompt-input";
-import { TerminalProgress } from "@/components/terminal-progress";
 import { SlideEditor } from "@/components/slide-editor";
 import { DownloadPPTX } from "@/components/download-pptx";
 import { useDeckStore } from "@/lib/store/deck-store";
@@ -31,9 +30,6 @@ export default function HomePage() {
 
       {/* Prompt Input */}
       <PromptInput />
-
-      {/* Terminal Progress */}
-      <TerminalProgress />
 
       {/* Slide count badge + Download */}
       {isActive && slideCount > 0 && (
