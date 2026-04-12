@@ -16,11 +16,16 @@ const API_BASE_URL =
 function makeTransport(headers: Record<string, string>) {
   return createConnectTransport({
     baseUrl: API_BASE_URL,
-    fetch: (input, init) =>
-      fetch(input, {
-        ...init,
-        headers: { ...(init?.headers as Record<string, string> ?? {}), ...headers },
-      }),
+    fetch: (input, init) => {
+      // init.headers is a Headers instance, NOT a plain object.
+      // Spreading it ({ ...init.headers }) produces {} and drops everything,
+      // including Content-Type and Connect-Protocol-Version → 415 on the server.
+      const merged = new Headers(init?.headers);
+      for (const [k, v] of Object.entries(headers)) {
+        if (v) merged.set(k, v);
+      }
+      return fetch(input, { ...init, headers: merged });
+    },
   });
 }
 
