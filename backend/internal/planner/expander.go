@@ -110,9 +110,9 @@ func (e *Expander) Expand(
 		// Populate section slide IDs.
 		ids := make([]string, 0, len(slides))
 		for _, s := range slides {
-			ids = append(ids, s.GetID())
+			ids = append(ids, s.GetId())
 		}
-		section.SlideIDs = ids
+		section.SlideIds = ids
 
 		allSlides = append(allSlides, slides...)
 		slideIndex += len(slides)
@@ -149,7 +149,7 @@ func (e *Expander) expandSection(
 		return nil, fmt.Errorf("decoding expand response: %w", err)
 	}
 
-	return itemsToSlideNodes(llmResp.Slides, plan.GetRequestID(), startIndex), nil
+	return itemsToSlideNodes(llmResp.Slides, plan.GetRequestId(), startIndex), nil
 }
 
 func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int) []*barqv1.SlideNode {
@@ -157,8 +157,8 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 
 	for i, item := range items {
 		node := &barqv1.SlideNode{
-			ID:           uuid.NewString(),
-			RequestID:    requestID,
+			Id:           uuid.NewString(),
+			RequestId:    requestID,
 			Index:        int32(startIndex + i),
 			Role:         stringToSlideRole(item.Role),
 			SpeakerNotes: item.SpeakerNotes,
@@ -166,7 +166,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 
 		// Title block.
 		node.Blocks = append(node.Blocks, &barqv1.ContentBlock{
-			ID:       uuid.NewString(),
+			Id:       uuid.NewString(),
 			Role:     "heading",
 			Text:     item.Title,
 			Emphasis: 3,
@@ -175,7 +175,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 		// Body bullet points.
 		for _, bp := range item.BodyPoints {
 			node.Blocks = append(node.Blocks, &barqv1.ContentBlock{
-				ID:   uuid.NewString(),
+				Id:   uuid.NewString(),
 				Role: "body",
 				Text: bp,
 			})
@@ -184,7 +184,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 		// KPI values → body blocks with kpi role.
 		for _, kpi := range item.KPIValues {
 			node.Blocks = append(node.Blocks, &barqv1.ContentBlock{
-				ID:       uuid.NewString(),
+				Id:       uuid.NewString(),
 				Role:     "kpi_value",
 				Text:     fmt.Sprintf("%s|%s|%s", kpi.Label, kpi.Value, kpi.Delta),
 				Emphasis: 2,
@@ -194,7 +194,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 		// Asset slots.
 		if item.NeedsChart && item.ChartQuery != "" {
 			node.Assets = append(node.Assets, &barqv1.AssetSlot{
-				ID:    uuid.NewString(),
+				Id:    uuid.NewString(),
 				Type:  barqv1.AssetType_ASSET_TYPE_CHART_BAR,
 				Query: item.ChartQuery,
 			})
@@ -202,7 +202,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 
 		if item.NeedsDiagram && item.DiagramQuery != "" {
 			node.Assets = append(node.Assets, &barqv1.AssetSlot{
-				ID:    uuid.NewString(),
+				Id:    uuid.NewString(),
 				Type:  barqv1.AssetType_ASSET_TYPE_DIAGRAM_FLOWCHART,
 				Query: item.DiagramQuery,
 			})
@@ -210,7 +210,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 
 		if item.NeedsPhoto && item.PhotoQuery != "" {
 			node.Assets = append(node.Assets, &barqv1.AssetSlot{
-				ID:       uuid.NewString(),
+				Id:       uuid.NewString(),
 				Type:     barqv1.AssetType_ASSET_TYPE_PHOTO,
 				Query:    item.PhotoQuery,
 				ImageUrl: "", // resolved in Phase 13
@@ -222,7 +222,7 @@ func itemsToSlideNodes(items []slideExpandItem, requestID string, startIndex int
 				continue
 			}
 			node.Assets = append(node.Assets, &barqv1.AssetSlot{
-				ID:    uuid.NewString(),
+				Id:    uuid.NewString(),
 				Type:  barqv1.AssetType_ASSET_TYPE_ICON,
 				Query: iq,
 			})

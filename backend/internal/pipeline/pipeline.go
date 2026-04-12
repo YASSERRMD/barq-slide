@@ -52,7 +52,7 @@ func emit(ch chan<- Event, ev Event) {
 }
 
 func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Event) {
-	reqID := spec.GetRequestID()
+	reqID := spec.GetRequestId()
 	log := cfg.Log.With(slog.String("request_id", reqID))
 
 	emit(ch, Event{

@@ -101,7 +101,7 @@ func buildDeckPlan(parsed *intent.ParsedIntent, r *arcLLMResponse) *barqv1.DeckP
 	}
 
 	return &barqv1.DeckPlan{
-		RequestID:   parsed.RequestID,
+		RequestId:   parsed.RequestID,
 		Title:       r.Title,
 		Subtitle:    r.Subtitle,
 		Arc:         arc,

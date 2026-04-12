@@ -48,7 +48,7 @@ func maxRunesByRegion(r layout.Region, fontSizePt float64) int {
 // DetectOverflows inspects a SlideNode for content that exceeds its region
 // boundaries and returns a list of issues.
 func DetectOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) []OverflowIssue {
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 	var issues []OverflowIssue
 
 	headingSizePt := 32.0
@@ -110,7 +110,7 @@ func AutoFixOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) *barq
 		return node
 	}
 
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 	headingSizePt := 32.0
 	if tokens.GetHeading().GetSizePt() > 0 {
 		headingSizePt = float64(tokens.GetHeading().GetSizePt())
@@ -168,8 +168,8 @@ func AutoFixOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) *barq
 	}
 
 	return &barqv1.SlideNode{
-		ID:           node.GetID(),
-		RequestID:    node.GetRequestID(),
+		Id:           node.GetId(),
+		RequestId:    node.GetRequestId(),
 		Index:        node.GetIndex(),
 		Role:         node.GetRole(),
 		Layout:       node.GetLayout(),

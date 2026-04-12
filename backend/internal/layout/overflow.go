@@ -107,7 +107,7 @@ func TruncateBlocks(blocks []*barqv1.ContentBlock) []*barqv1.ContentBlock {
 			text = truncateAtWord(text, maxCharsPerBullet)
 		}
 		out = append(out, &barqv1.ContentBlock{
-			ID:       b.GetID(),
+			Id:       b.GetId(),
 			Role:     b.GetRole(),
 			Text:     text,
 			Emphasis: b.GetEmphasis(),
@@ -133,8 +133,8 @@ func SplitOverflowSlide(node *barqv1.SlideNode) (primary, overflow *barqv1.Slide
 	nonBodyBlocks := filterBlocksExcludeRole(node.GetBlocks(), "body")
 
 	primaryNode := &barqv1.SlideNode{
-		ID:           node.GetID(),
-		RequestID:    node.GetRequestID(),
+		Id:           node.GetId(),
+		RequestId:    node.GetRequestId(),
 		Index:        node.GetIndex(),
 		Role:         node.GetRole(),
 		Layout:       node.GetLayout(),
@@ -148,15 +148,15 @@ func SplitOverflowSlide(node *barqv1.SlideNode) (primary, overflow *barqv1.Slide
 	// Overflow node: same heading, suffix "(cont'd)", excess bullets only.
 	headingBlock := findFirstBlockByRole(node.GetBlocks(), "heading")
 	overflowHeading := &barqv1.ContentBlock{
-		ID:       headingBlock.GetID() + "_cont",
+		Id:       headingBlock.GetId() + "_cont",
 		Role:     "heading",
 		Text:     headingBlock.GetText() + " (cont'd)",
 		Emphasis: headingBlock.GetEmphasis(),
 	}
 
 	overflowNode := &barqv1.SlideNode{
-		ID:           node.GetID() + "_overflow",
-		RequestID:    node.GetRequestID(),
+		Id:           node.GetId() + "_overflow",
+		RequestId:    node.GetRequestId(),
 		Index:        node.GetIndex() + 1,
 		Role:         node.GetRole(),
 		Layout:       node.GetLayout(),

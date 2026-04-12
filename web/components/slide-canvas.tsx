@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, FocusEvent, KeyboardEvent } from "react";
 import type { SlideNode, ContentBlock, DesignTokens } from "@/lib/store/deck-store";
+import { useDeckStore } from "@/lib/store/deck-store";
 
 /**
  * Maps SlideLayout layoutId to CSS grid definitions.
@@ -45,16 +46,17 @@ const DEFAULT_GRID = { columns: "1fr", areas: '"content"' };
 interface SlideCanvasProps {
   slide: SlideNode;
   tokens?: DesignTokens | null;
-  /** Scale factor for preview (0-1). Default 1. */
   scale?: number;
   className?: string;
+  /** If true, blocks can be edited inline */
+  isEditable?: boolean;
 }
 
 /**
  * SlideCanvas renders a single slide as a responsive CSS Grid layout
  * using the DesignTokens as CSS custom properties.
  */
-export function SlideCanvas({ slide, tokens, scale = 1, className = "" }: SlideCanvasProps) {
+export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditable = false }: SlideCanvasProps) {
   const layoutId = slide.layout?.layoutId ?? 1;
   const grid = GRID_LAYOUTS[layoutId] ?? DEFAULT_GRID;
 
@@ -108,11 +110,13 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "" }: SlideC
         {slide.blocks.map((block, i) => (
           <SlideBlock
             key={block.id || i}
+            slideId={slide.id}
             block={block}
             index={i}
             tokens={tokens}
             scale={scale}
             isDark={isDark}
+            isEditable={isEditable}
           />
         ))}
       </div>
@@ -121,15 +125,18 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "" }: SlideC
 }
 
 interface SlideBlockProps {
+  slideId: string;
   block: ContentBlock;
   index: number;
   tokens?: DesignTokens | null;
   scale: number;
   isDark: boolean;
+  isEditable: boolean;
 }
 
-function SlideBlock({ block, index, tokens, scale, isDark }: SlideBlockProps) {
+function SlideBlock({ slideId, block, index, tokens, scale, isDark, isEditable }: SlideBlockProps) {
   const role = block.role || "body";
+  const updateBlockText = useDeckStore((s) => s.updateBlockText);
 
   const style: React.CSSProperties = {};
 
@@ -165,9 +172,29 @@ function SlideBlock({ block, index, tokens, scale, isDark }: SlideBlockProps) {
     style.color = primary;
   }
 
+  const handleBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (!isEditable) return;
+    const newText = e.currentTarget.innerText;
+    if (newText !== block.text) {
+      updateBlockText(slideId, block.id, index, newText);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!isEditable) return;
+    // Prevent adding complex formatting or bolding via shortcuts if desired
+    // Currently relying on plaintext processing when converting to PPTX
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (role !== "bullet") {
+        e.preventDefault();
+        e.currentTarget.blur();
+      }
+    }
+  };
+
   return (
     <div
-      className="min-w-0 break-words"
+      className={`min-w-0 break-words ${isEditable ? "focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-sm -m-1 p-1 transition-shadow cursor-text" : ""}`}
       style={style}
       id={`slide-block-${block.id || index}`}
     >
@@ -175,12 +202,31 @@ function SlideBlock({ block, index, tokens, scale, isDark }: SlideBlockProps) {
         <ul style={{ paddingLeft: `${16 * scale}px`, margin: 0 }}>
           {block.text.split("\n").map((line, li) => (
             <li key={li} style={{ marginBottom: `${4 * scale}px` }}>
-              {line}
+              <div
+                contentEditable={isEditable ? "plaintext-only" : false}
+                suppressContentEditableWarning
+                onBlur={(e) => {
+                  if (!isEditable) return;
+                  const newLines = [...block.text.split("\n")];
+                  newLines[li] = e.currentTarget.innerText.trim();
+                  updateBlockText(slideId, block.id, index, newLines.join("\n"));
+                }}
+              >
+                {line}
+              </div>
             </li>
           ))}
         </ul>
       ) : (
-        <div style={{ whiteSpace: "pre-wrap" }}>{block.text}</div>
+        <div
+          contentEditable={isEditable ? "plaintext-only" : false}
+          suppressContentEditableWarning
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={{ whiteSpace: "pre-wrap" }}
+        >
+          {block.text}
+        </div>
       )}
     </div>
   );
