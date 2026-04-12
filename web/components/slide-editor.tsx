@@ -45,6 +45,8 @@ export function SlideEditor() {
           headers: {
             "Content-Type": "application/json",
             "Connect-Protocol-Version": "1",
+            "X-Llm-Provider": useDeckStore.getState().llmProvider || "anthropic",
+            "X-Llm-Api-Key": useDeckStore.getState().llmApiKey || "",
           },
           body: JSON.stringify({
             requestId: selectedSlide.requestId,

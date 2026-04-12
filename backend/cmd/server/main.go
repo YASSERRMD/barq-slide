@@ -35,13 +35,13 @@ func main() {
 	)
 
 	factory := llm.NewFactory(cfg)
-	provider, err := factory.Default()
-	if err != nil {
-		log.Error("failed to create LLM provider", "error", err)
-		os.Exit(1)
+	// We no longer fatally exit if the default provider fails to initialize
+	// because the API key could be dynamically provided at runtime by the user.
+	if _, err := factory.Default(); err != nil {
+		log.Warn("default llm provider failed to initialize (will require frontend headers)", "error", err)
 	}
 
-	handler := api.New(log, provider)
+	handler := api.New(log, factory)
 	path, svcHandler := barqv1.NewHeliosServiceHandler(handler)
 
 	mux := http.NewServeMux()
@@ -94,7 +94,7 @@ func withCORS(allowOrigin string, next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers",
-			"Accept, Content-Type, Content-Length, Accept-Encoding, Connect-Protocol-Version, X-Request-ID")
+			"Accept, Content-Type, Content-Length, Accept-Encoding, Connect-Protocol-Version, X-Request-ID, X-Llm-Provider, X-Llm-Api-Key")
 		w.Header().Set("Access-Control-Expose-Headers",
 			"Grpc-Status, Grpc-Message, Grpc-Status-Details-Bin")
 		if r.Method == http.MethodOptions {

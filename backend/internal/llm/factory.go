@@ -41,6 +41,61 @@ func (f *Factory) Get(name ProviderName) (Provider, error) {
 	}
 }
 
+// GetDynamic returns a Provider by name, substituting the API key at runtime.
+func (f *Factory) GetDynamic(name ProviderName, apiKey string) (Provider, error) {
+	if apiKey == "" {
+		return f.Get(name)
+	}
+
+	switch name {
+	case ProviderAnthropic, "":
+		return NewAnthropicAdapter(Config{
+			Provider:    ProviderAnthropic,
+			APIKey:      apiKey,
+			Model:       f.cfg.LLM.Anthropic.Model,
+			MaxTokens:   defaultAnthropicMaxTokens,
+			Temperature: defaultAnthropicTemperature,
+		})
+	case ProviderGemini:
+		return NewGeminiAdapter(Config{
+			Provider:    ProviderGemini,
+			APIKey:      apiKey,
+			Model:       f.cfg.LLM.Gemini.Model,
+			MaxTokens:   defaultGeminiMaxTokens,
+			Temperature: defaultGeminiTemperature,
+		})
+	case ProviderOpenAI:
+		return NewOpenAICompatAdapter(ProviderOpenAI, Config{
+			Provider:    ProviderOpenAI,
+			APIKey:      apiKey,
+			BaseURL:     f.cfg.LLM.OpenAI.BaseURL,
+			Model:       f.cfg.LLM.OpenAI.Model,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	case ProviderXAI:
+		return NewOpenAICompatAdapter(ProviderXAI, Config{
+			Provider:    ProviderXAI,
+			APIKey:      apiKey,
+			BaseURL:     f.cfg.LLM.XAI.BaseURL,
+			Model:       f.cfg.LLM.XAI.Model,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	case ProviderMinimax:
+		return NewOpenAICompatAdapter(ProviderMinimax, Config{
+			Provider:    ProviderMinimax,
+			APIKey:      apiKey,
+			BaseURL:     f.cfg.LLM.Minimax.BaseURL,
+			Model:       f.cfg.LLM.Minimax.Model,
+			MaxTokens:   defaultOpenAIMaxTokens,
+			Temperature: defaultOpenAITemperature,
+		})
+	default:
+		return nil, fmt.Errorf("llm factory (dynamic): unknown provider %q", name)
+	}
+}
+
 func (f *Factory) anthropic() (Provider, error) {
 	return NewAnthropicAdapter(Config{
 		Provider:    ProviderAnthropic,

@@ -79,6 +79,8 @@ export function useGenerateDeck() {
         headers: {
           "Content-Type": "application/json",
           "Connect-Protocol-Version": "1",
+          "X-Llm-Provider": store().llmProvider || "anthropic",
+          "X-Llm-Api-Key": store().llmApiKey || "",
         },
         body: JSON.stringify({
           intent: {

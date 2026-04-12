@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 
 // ── Minimal TS mirrors of the proto types (until buf generates TypeScript) ────
 
@@ -103,6 +103,12 @@ export interface GenerationProgress {
 // ── Zustand store ─────────────────────────────────────────────────────────────
 
 export interface DeckState {
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  llmProvider: string;
+  llmApiKey: string;
+
+  // ── Generation State ─────────────────────────────────────────────────────────
+
   // Current active request ID.
   requestId: string | null;
 
@@ -137,6 +143,8 @@ export interface DeckState {
   setSnapshot: (slideId: string, dataUrl: string) => void;
   setSelectedSlideIndex: (index: number) => void;
   setCompleted: (slides: SlideNode[]) => void;
+  updateBlockText: (slideId: string, blockId: string, blockIndex: number, text: string) => void;
+  setLlmConfig: (provider: string, apiKey: string) => void;
   reset: () => void;
 }
 
@@ -147,16 +155,19 @@ const initialProgress: GenerationProgress = {
 };
 
 export const useDeckStore = create<DeckState>()(
-  devtools(
-    (set) => ({
-      requestId: null,
-      progress: initialProgress,
-      plan: null,
-      tokens: null,
-      slidesById: {},
-      slideOrder: [],
-      selectedSlideIndex: 0,
-      snapshotsById: {},
+  persist(
+    devtools(
+      (set) => ({
+        llmProvider: "anthropic",
+        llmApiKey: "",
+        requestId: null,
+        progress: initialProgress,
+        plan: null,
+        tokens: null,
+        slidesById: {},
+        slideOrder: [],
+        selectedSlideIndex: 0,
+        snapshotsById: {},
 
       setRequestId: (id) => set({ requestId: id }),
 
@@ -202,8 +213,40 @@ export const useDeckStore = create<DeckState>()(
         });
       },
 
+      updateBlockText: (slideId, blockId, blockIndex, text) =>
+        set((state) => {
+          const slide = state.slidesById[slideId];
+          if (!slide) return state;
+
+          // Deep copy the blocks array and the specific block to maintain immutability.
+          const newBlocks = [...slide.blocks];
+          
+          // Find the block either by ID or Index.
+          let targetIndex = -1;
+          if (blockId) {
+            targetIndex = newBlocks.findIndex((b) => b.id === blockId);
+          }
+          if (targetIndex === -1) {
+            targetIndex = blockIndex;
+          }
+
+          if (targetIndex >= 0 && targetIndex < newBlocks.length) {
+            newBlocks[targetIndex] = { ...newBlocks[targetIndex], text };
+            
+            return {
+              slidesById: {
+                ...state.slidesById,
+                [slideId]: { ...slide, blocks: newBlocks },
+              },
+            };
+          }
+          return state;
+        }),
+
+      setLlmConfig: (provider, apiKey) =>
+        set({ llmProvider: provider, llmApiKey: apiKey }),
       reset: () =>
-        set({
+        set((state) => ({
           requestId: null,
           progress: initialProgress,
           plan: null,
@@ -212,8 +255,17 @@ export const useDeckStore = create<DeckState>()(
           slideOrder: [],
           selectedSlideIndex: 0,
           snapshotsById: {},
-        }),
+          // We intentionally do not reset llmProvider and llmApiKey here
+        })),
     }),
-    { name: "deck-store" }
-  )
+    { name: "deck-store-dev" }
+  ),
+  {
+    name: "barq-llm-config",
+    partialize: (state) => ({
+      llmProvider: state.llmProvider,
+      llmApiKey: state.llmApiKey,
+    }),
+  }
+)
 );

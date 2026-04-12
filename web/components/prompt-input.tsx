@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Send, Sparkles, ChevronDown } from "lucide-react";
 import { useGenerateDeck } from "@/lib/store/use-generate-deck";
 import { useDeckStore } from "@/lib/store/deck-store";
+import { Eye, EyeOff } from "lucide-react";
 
 const TONE_OPTIONS = ["professional", "conversational", "academic", "bold", "minimal"] as const;
 const AUDIENCE_OPTIONS = ["executives", "team", "investors", "students", "general"] as const;
@@ -13,11 +14,15 @@ export function PromptInput() {
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState("");
   const [showOptions, setShowOptions] = useState(false);
+  const [showKey, setShowKey] = useState(false);
   const [slideCount, setSlideCount] = useState(10);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const generate = useGenerateDeck();
   const status = useDeckStore((s) => s.progress.status);
+  const llmProvider = useDeckStore((s) => s.llmProvider);
+  const llmApiKey = useDeckStore((s) => s.llmApiKey);
+  const setLlmConfig = useDeckStore((s) => s.setLlmConfig);
   const isGenerating = status !== "idle" && status !== "completed" && status !== "error";
 
   // Auto-resize textarea.
@@ -156,6 +161,44 @@ export function PromptInput() {
               <div className="flex justify-between text-[10px] text-muted-foreground/60 mt-0.5">
                 <span>5</span>
                 <span>30</span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border/30 mt-2">
+              <label className="text-xs font-semibold text-foreground mb-2 block">
+                LLM Configuration
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <select
+                    value={llmProvider}
+                    onChange={(e) => setLlmConfig(e.target.value, llmApiKey)}
+                    className="w-full text-sm rounded-lg border border-border/50 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  >
+                    <option value="anthropic">Anthropic</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="xai">xAI</option>
+                    <option value="minimax">Minimax</option>
+                  </select>
+                </div>
+                <div className="col-span-2 relative">
+                  <input
+                    type={showKey ? "text" : "password"}
+                    value={llmApiKey}
+                    onChange={(e) => setLlmConfig(llmProvider, e.target.value)}
+                    placeholder="Enter API Key (saved locally)"
+                    className="w-full text-sm rounded-lg border border-border/50 bg-background pl-3 pr-9 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    title={showKey ? "Hide key" : "Show key"}
+                  >
+                    {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
