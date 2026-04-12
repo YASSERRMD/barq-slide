@@ -159,11 +159,15 @@ func (o *OpenAICompatAdapter) GenerateStructured(ctx context.Context, req Genera
 		Model:     o.model,
 		Messages:  msgs,
 		MaxTokens: maxTokens,
-		// json_object mode is the most broadly supported structured output
-		// mode across OpenAI-compatible providers (xAI, Minimax, OpenAI).
-		ResponseFormat: &openai.ChatCompletionResponseFormat{
+	}
+
+	// Only native OpenAI endpoints reliably support json_object response format.
+	// OpenAI-compatible providers (GLM, z.ai, xAI, Minimax, Ollama) often
+	// ignore or reject it, so we rely on the system prompt instead.
+	if o.provider == ProviderOpenAI {
+		chatReq.ResponseFormat = &openai.ChatCompletionResponseFormat{
 			Type: openai.ChatCompletionResponseFormatTypeJSONObject,
-		},
+		}
 	}
 
 	resp, err := o.client.CreateChatCompletion(ctx, chatReq)
@@ -175,9 +179,10 @@ func (o *OpenAICompatAdapter) GenerateStructured(ctx context.Context, req Genera
 		return nil, fmt.Errorf("%s: empty choices in structured response", o.provider)
 	}
 
-	raw := json.RawMessage(resp.Choices[0].Message.Content)
+	extracted := extractJSON(resp.Choices[0].Message.Content)
+	raw := json.RawMessage(extracted)
 	if !json.Valid(raw) {
-		return nil, fmt.Errorf("%s: structured response is not valid JSON", o.provider)
+		return nil, fmt.Errorf("%s: structured response is not valid JSON\nraw: %s", o.provider, truncate(extracted, 300))
 	}
 
 	return &StructuredResponse{
@@ -189,6 +194,79 @@ func (o *OpenAICompatAdapter) GenerateStructured(ctx context.Context, req Genera
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────────
+
+// extractJSON strips markdown code fences and extracts the first JSON object
+// or array from the string. Many OpenAI-compatible models wrap JSON in
+// ```json ... ``` even when asked not to.
+func extractJSON(s string) string {
+	// Strip ```json ... ``` or ``` ... ``` code fences.
+	for _, fence := range []string{"```json", "```"} {
+		if start := indexOf(s, fence); start != -1 {
+			s = s[start+len(fence):]
+			if end := indexOf(s, "```"); end != -1 {
+				s = s[:end]
+			}
+		}
+	}
+
+	// Find the first { or [ and the matching closing bracket.
+	for i, ch := range s {
+		if ch == '{' || ch == '[' {
+			close := byte('}')
+			if ch == '[' {
+				close = ']'
+			}
+			// Walk to the matching close bracket counting depth.
+			depth := 0
+			inStr := false
+			escape := false
+			for j := i; j < len(s); j++ {
+				b := s[j]
+				if escape {
+					escape = false
+					continue
+				}
+				if b == '\\' && inStr {
+					escape = true
+					continue
+				}
+				if b == '"' {
+					inStr = !inStr
+					continue
+				}
+				if inStr {
+					continue
+				}
+				if b == s[i] {
+					depth++
+				} else if b == close {
+					depth--
+					if depth == 0 {
+						return s[i : j+1]
+					}
+				}
+			}
+			break
+		}
+	}
+	return s
+}
+
+func indexOf(s, substr string) int {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}
 
 func toOpenAIMessages(system string, msgs []Message) []openai.ChatCompletionMessage {
 	out := make([]openai.ChatCompletionMessage, 0, len(msgs)+1)
