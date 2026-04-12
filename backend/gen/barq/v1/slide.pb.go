@@ -7,45 +7,74 @@ package barqv1
 type SlideRole int32
 
 const (
-	SlideRole_SLIDE_ROLE_UNSPECIFIED    SlideRole = 0
-	SlideRole_SLIDE_ROLE_TITLE          SlideRole = 1
+	SlideRole_SLIDE_ROLE_UNSPECIFIED     SlideRole = 0
+	SlideRole_SLIDE_ROLE_TITLE           SlideRole = 1
 	SlideRole_SLIDE_ROLE_SECTION_DIVIDER SlideRole = 2
-	SlideRole_SLIDE_ROLE_CONTENT        SlideRole = 3
-	SlideRole_SLIDE_ROLE_DATA           SlideRole = 4
-	SlideRole_SLIDE_ROLE_DIAGRAM        SlideRole = 5
-	SlideRole_SLIDE_ROLE_IMAGE_HERO     SlideRole = 6
-	SlideRole_SLIDE_ROLE_QUOTE          SlideRole = 7
-	SlideRole_SLIDE_ROLE_KPI            SlideRole = 8
-	SlideRole_SLIDE_ROLE_TIMELINE       SlideRole = 9
-	SlideRole_SLIDE_ROLE_COMPARISON     SlideRole = 10
-	SlideRole_SLIDE_ROLE_CLOSING        SlideRole = 11
+	SlideRole_SLIDE_ROLE_CONTENT         SlideRole = 3
+	SlideRole_SLIDE_ROLE_DATA            SlideRole = 4
+	SlideRole_SLIDE_ROLE_DIAGRAM         SlideRole = 5
+	SlideRole_SLIDE_ROLE_IMAGE_HERO      SlideRole = 6
+	SlideRole_SLIDE_ROLE_QUOTE           SlideRole = 7
+	SlideRole_SLIDE_ROLE_KPI             SlideRole = 8
+	SlideRole_SLIDE_ROLE_TIMELINE        SlideRole = 9
+	SlideRole_SLIDE_ROLE_COMPARISON      SlideRole = 10
+	SlideRole_SLIDE_ROLE_CLOSING         SlideRole = 11
 )
+
+func (s SlideRole) String() string {
+	switch s {
+	case SlideRole_SLIDE_ROLE_TITLE:
+		return "title"
+	case SlideRole_SLIDE_ROLE_SECTION_DIVIDER:
+		return "section_divider"
+	case SlideRole_SLIDE_ROLE_CONTENT:
+		return "content"
+	case SlideRole_SLIDE_ROLE_DATA:
+		return "data"
+	case SlideRole_SLIDE_ROLE_DIAGRAM:
+		return "diagram"
+	case SlideRole_SLIDE_ROLE_IMAGE_HERO:
+		return "image_hero"
+	case SlideRole_SLIDE_ROLE_QUOTE:
+		return "quote"
+	case SlideRole_SLIDE_ROLE_KPI:
+		return "kpi"
+	case SlideRole_SLIDE_ROLE_TIMELINE:
+		return "timeline"
+	case SlideRole_SLIDE_ROLE_COMPARISON:
+		return "comparison"
+	case SlideRole_SLIDE_ROLE_CLOSING:
+		return "closing"
+	default:
+		return "unspecified"
+	}
+}
 
 // LayoutID enumerates all named layout templates.
 type LayoutID int32
 
 const (
-	LayoutID_LAYOUT_ID_UNSPECIFIED          LayoutID = 0
-	LayoutID_LAYOUT_ID_TITLE_CENTER         LayoutID = 1
-	LayoutID_LAYOUT_ID_TITLE_LEFT           LayoutID = 2
-	LayoutID_LAYOUT_ID_HERO_IMAGE           LayoutID = 3
-	LayoutID_LAYOUT_ID_TWO_COLUMN           LayoutID = 4
-	LayoutID_LAYOUT_ID_THREE_COLUMN         LayoutID = 5
-	LayoutID_LAYOUT_ID_BULLET_LIST          LayoutID = 6
-	LayoutID_LAYOUT_ID_NUMBERED_LIST        LayoutID = 7
-	LayoutID_LAYOUT_ID_QUOTE_FULL           LayoutID = 8
-	LayoutID_LAYOUT_ID_KPI_CARDS            LayoutID = 9
-	LayoutID_LAYOUT_ID_CHART_FULL           LayoutID = 10
-	LayoutID_LAYOUT_ID_CHART_WITH_TEXT      LayoutID = 11
-	LayoutID_LAYOUT_ID_DIAGRAM_FULL         LayoutID = 12
-	LayoutID_LAYOUT_ID_TIMELINE_HORIZONTAL  LayoutID = 13
-	LayoutID_LAYOUT_ID_TIMELINE_VERTICAL    LayoutID = 14
-	LayoutID_LAYOUT_ID_SECTION_DIVIDER      LayoutID = 15
-	LayoutID_LAYOUT_ID_COMPARISON_TABLE     LayoutID = 16
-	LayoutID_LAYOUT_ID_IMAGE_GRID           LayoutID = 17
-	LayoutID_LAYOUT_ID_ICON_GRID            LayoutID = 18
-	LayoutID_LAYOUT_ID_PROCESS_FLOW         LayoutID = 19
-	LayoutID_LAYOUT_ID_CLOSING              LayoutID = 20
+	LayoutID_LAYOUT_ID_UNSPECIFIED         LayoutID = 0
+	LayoutID_LAYOUT_ID_TITLE_CENTER        LayoutID = 1
+	LayoutID_LAYOUT_ID_TITLE_LEFT          LayoutID = 2
+	LayoutID_LAYOUT_ID_HERO_IMAGE          LayoutID = 3
+	LayoutID_LAYOUT_ID_TWO_COLUMN          LayoutID = 4
+	LayoutID_LAYOUT_ID_THREE_COLUMN        LayoutID = 5
+	LayoutID_LAYOUT_ID_BULLET_LIST         LayoutID = 6
+	LayoutID_LAYOUT_ID_NUMBERED_LIST       LayoutID = 7
+	LayoutID_LAYOUT_ID_QUOTE_FULL          LayoutID = 8
+	LayoutID_LAYOUT_ID_KPI_CARDS           LayoutID = 9
+	LayoutID_LAYOUT_ID_CHART_FULL          LayoutID = 10
+	LayoutID_LAYOUT_ID_CHART_WITH_TEXT     LayoutID = 11
+	LayoutID_LAYOUT_ID_DIAGRAM_FULL        LayoutID = 12
+	LayoutID_LAYOUT_ID_TIMELINE_HORIZONTAL LayoutID = 13
+	LayoutID_LAYOUT_ID_TIMELINE_VERTICAL   LayoutID = 14
+	LayoutID_LAYOUT_ID_SECTION_DIVIDER     LayoutID = 15
+	LayoutID_LAYOUT_ID_COMPARISON_TABLE    LayoutID = 16
+	LayoutID_LAYOUT_ID_IMAGE_GRID          LayoutID = 17
+	LayoutID_LAYOUT_ID_ICON_GRID           LayoutID = 18
+	LayoutID_LAYOUT_ID_PROCESS_FLOW        LayoutID = 19
+	LayoutID_LAYOUT_ID_CLOSING             LayoutID = 20
 )
 
 // AssetType classifies the kind of visual asset in a slot.
@@ -74,21 +103,125 @@ type ContentBlock struct {
 	Emphasis int32  `json:"emphasis,omitempty"`
 }
 
+func (c *ContentBlock) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+func (c *ContentBlock) GetRole() string {
+	if c == nil {
+		return ""
+	}
+	return c.Role
+}
+func (c *ContentBlock) GetText() string {
+	if c == nil {
+		return ""
+	}
+	return c.Text
+}
+func (c *ContentBlock) GetEmphasis() int32 {
+	if c == nil {
+		return 0
+	}
+	return c.Emphasis
+}
+
 // AssetSlot describes a placeholder for a visual asset on a slide.
 type AssetSlot struct {
-	ID             string    `json:"id,omitempty"`
-	Type           AssetType `json:"type,omitempty"`
-	Query          string    `json:"query,omitempty"`
-	ChartDataJson  string    `json:"chart_data_json,omitempty"`
-	MermaidSource  string    `json:"mermaid_source,omitempty"`
-	IconName       string    `json:"icon_name,omitempty"`
-	ImageUrl       string    `json:"image_url,omitempty"`
-	RenderedBytes  []byte    `json:"rendered_bytes,omitempty"`
-	RenderedMime   string    `json:"rendered_mime,omitempty"`
-	EmuX           int64     `json:"emu_x,omitempty"`
-	EmuY           int64     `json:"emu_y,omitempty"`
-	EmuWidth       int64     `json:"emu_width,omitempty"`
-	EmuHeight      int64     `json:"emu_height,omitempty"`
+	ID            string    `json:"id,omitempty"`
+	Type          AssetType `json:"type,omitempty"`
+	Query         string    `json:"query,omitempty"`
+	ChartDataJson string    `json:"chart_data_json,omitempty"`
+	MermaidSource string    `json:"mermaid_source,omitempty"`
+	IconName      string    `json:"icon_name,omitempty"`
+	ImageUrl      string    `json:"image_url,omitempty"`
+	RenderedBytes []byte    `json:"rendered_bytes,omitempty"`
+	RenderedMime  string    `json:"rendered_mime,omitempty"`
+	EmuX          int64     `json:"emu_x,omitempty"`
+	EmuY          int64     `json:"emu_y,omitempty"`
+	EmuWidth      int64     `json:"emu_width,omitempty"`
+	EmuHeight     int64     `json:"emu_height,omitempty"`
+}
+
+func (a *AssetSlot) GetID() string {
+	if a == nil {
+		return ""
+	}
+	return a.ID
+}
+func (a *AssetSlot) GetType() AssetType {
+	if a == nil {
+		return AssetType_ASSET_TYPE_UNSPECIFIED
+	}
+	return a.Type
+}
+func (a *AssetSlot) GetQuery() string {
+	if a == nil {
+		return ""
+	}
+	return a.Query
+}
+func (a *AssetSlot) GetChartDataJson() string {
+	if a == nil {
+		return ""
+	}
+	return a.ChartDataJson
+}
+func (a *AssetSlot) GetMermaidSource() string {
+	if a == nil {
+		return ""
+	}
+	return a.MermaidSource
+}
+func (a *AssetSlot) GetIconName() string {
+	if a == nil {
+		return ""
+	}
+	return a.IconName
+}
+func (a *AssetSlot) GetImageUrl() string {
+	if a == nil {
+		return ""
+	}
+	return a.ImageUrl
+}
+func (a *AssetSlot) GetRenderedBytes() []byte {
+	if a == nil {
+		return nil
+	}
+	return a.RenderedBytes
+}
+func (a *AssetSlot) GetRenderedMime() string {
+	if a == nil {
+		return ""
+	}
+	return a.RenderedMime
+}
+func (a *AssetSlot) GetEmuX() int64 {
+	if a == nil {
+		return 0
+	}
+	return a.EmuX
+}
+func (a *AssetSlot) GetEmuY() int64 {
+	if a == nil {
+		return 0
+	}
+	return a.EmuY
+}
+func (a *AssetSlot) GetEmuWidth() int64 {
+	if a == nil {
+		return 0
+	}
+	return a.EmuWidth
+}
+func (a *AssetSlot) GetEmuHeight() int64 {
+	if a == nil {
+		return 0
+	}
+	return a.EmuHeight
 }
 
 // SlideLayout specifies the visual geometry of a slide.
@@ -97,6 +230,31 @@ type SlideLayout struct {
 	ColumnCount      int32    `json:"column_count,omitempty"`
 	HasMediaRegion   bool     `json:"has_media_region,omitempty"`
 	IsDarkBackground bool     `json:"is_dark_background,omitempty"`
+}
+
+func (s *SlideLayout) GetLayoutID() LayoutID {
+	if s == nil {
+		return LayoutID_LAYOUT_ID_UNSPECIFIED
+	}
+	return s.LayoutID
+}
+func (s *SlideLayout) GetColumnCount() int32 {
+	if s == nil {
+		return 0
+	}
+	return s.ColumnCount
+}
+func (s *SlideLayout) GetHasMediaRegion() bool {
+	if s == nil {
+		return false
+	}
+	return s.HasMediaRegion
+}
+func (s *SlideLayout) GetIsDarkBackground() bool {
+	if s == nil {
+		return false
+	}
+	return s.IsDarkBackground
 }
 
 // Typography defines a font stack for a semantic text role.
@@ -109,22 +267,144 @@ type Typography struct {
 	IsUppercase     bool    `json:"is_uppercase,omitempty"`
 }
 
+func (t *Typography) GetFontFamily() string {
+	if t == nil {
+		return ""
+	}
+	return t.FontFamily
+}
+func (t *Typography) GetSizePt() float64 {
+	if t == nil {
+		return 0
+	}
+	return t.SizePt
+}
+func (t *Typography) GetWeight() int32 {
+	if t == nil {
+		return 0
+	}
+	return t.Weight
+}
+func (t *Typography) GetLineHeight() float64 {
+	if t == nil {
+		return 0
+	}
+	return t.LineHeight
+}
+func (t *Typography) GetLetterSpacingEm() float64 {
+	if t == nil {
+		return 0
+	}
+	return t.LetterSpacingEm
+}
+func (t *Typography) GetIsUppercase() bool {
+	if t == nil {
+		return false
+	}
+	return t.IsUppercase
+}
+
 // DesignTokens is the deterministic design system for a deck.
 type DesignTokens struct {
-	PrimaryHex       string      `json:"primary_hex,omitempty"`
-	SecondaryHex     string      `json:"secondary_hex,omitempty"`
-	BackgroundHex    string      `json:"background_hex,omitempty"`
-	SurfaceHex       string      `json:"surface_hex,omitempty"`
-	OnPrimaryHex     string      `json:"on_primary_hex,omitempty"`
-	OnBackgroundHex  string      `json:"on_background_hex,omitempty"`
-	MutedHex         string      `json:"muted_hex,omitempty"`
-	Heading          *Typography `json:"heading,omitempty"`
-	Subheading       *Typography `json:"subheading,omitempty"`
-	Body             *Typography `json:"body,omitempty"`
-	Caption          *Typography `json:"caption,omitempty"`
-	BorderRadiusEmu  int32       `json:"border_radius_emu,omitempty"`
-	GutterEmu        int32       `json:"gutter_emu,omitempty"`
-	Mood             string      `json:"mood,omitempty"`
+	PrimaryHex      string      `json:"primary_hex,omitempty"`
+	SecondaryHex    string      `json:"secondary_hex,omitempty"`
+	BackgroundHex   string      `json:"background_hex,omitempty"`
+	SurfaceHex      string      `json:"surface_hex,omitempty"`
+	OnPrimaryHex    string      `json:"on_primary_hex,omitempty"`
+	OnBackgroundHex string      `json:"on_background_hex,omitempty"`
+	MutedHex        string      `json:"muted_hex,omitempty"`
+	Heading         *Typography `json:"heading,omitempty"`
+	Subheading      *Typography `json:"subheading,omitempty"`
+	Body            *Typography `json:"body,omitempty"`
+	Caption         *Typography `json:"caption,omitempty"`
+	BorderRadiusEmu int32       `json:"border_radius_emu,omitempty"`
+	GutterEmu       int32       `json:"gutter_emu,omitempty"`
+	Mood            string      `json:"mood,omitempty"`
+}
+
+func (d *DesignTokens) GetPrimaryHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.PrimaryHex
+}
+func (d *DesignTokens) GetSecondaryHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.SecondaryHex
+}
+func (d *DesignTokens) GetBackgroundHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.BackgroundHex
+}
+func (d *DesignTokens) GetSurfaceHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.SurfaceHex
+}
+func (d *DesignTokens) GetOnPrimaryHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.OnPrimaryHex
+}
+func (d *DesignTokens) GetOnBackgroundHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.OnBackgroundHex
+}
+func (d *DesignTokens) GetMutedHex() string {
+	if d == nil {
+		return ""
+	}
+	return d.MutedHex
+}
+func (d *DesignTokens) GetHeading() *Typography {
+	if d == nil {
+		return nil
+	}
+	return d.Heading
+}
+func (d *DesignTokens) GetSubheading() *Typography {
+	if d == nil {
+		return nil
+	}
+	return d.Subheading
+}
+func (d *DesignTokens) GetBody() *Typography {
+	if d == nil {
+		return nil
+	}
+	return d.Body
+}
+func (d *DesignTokens) GetCaption() *Typography {
+	if d == nil {
+		return nil
+	}
+	return d.Caption
+}
+func (d *DesignTokens) GetBorderRadiusEmu() int32 {
+	if d == nil {
+		return 0
+	}
+	return d.BorderRadiusEmu
+}
+func (d *DesignTokens) GetGutterEmu() int32 {
+	if d == nil {
+		return 0
+	}
+	return d.GutterEmu
+}
+func (d *DesignTokens) GetMood() string {
+	if d == nil {
+		return ""
+	}
+	return d.Mood
 }
 
 // SlideNode is a fully-resolved slide ready for both render paths.
@@ -139,4 +419,65 @@ type SlideNode struct {
 	SpeakerNotes string          `json:"speaker_notes,omitempty"`
 	BgColorHex   string          `json:"bg_color_hex,omitempty"`
 	Tokens       *DesignTokens   `json:"tokens,omitempty"`
+}
+
+func (s *SlideNode) GetID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ID
+}
+func (s *SlideNode) GetRequestID() string {
+	if s == nil {
+		return ""
+	}
+	return s.RequestID
+}
+func (s *SlideNode) GetIndex() int32 {
+	if s == nil {
+		return 0
+	}
+	return s.Index
+}
+func (s *SlideNode) GetRole() SlideRole {
+	if s == nil {
+		return SlideRole_SLIDE_ROLE_UNSPECIFIED
+	}
+	return s.Role
+}
+func (s *SlideNode) GetLayout() *SlideLayout {
+	if s == nil {
+		return nil
+	}
+	return s.Layout
+}
+func (s *SlideNode) GetBlocks() []*ContentBlock {
+	if s == nil {
+		return nil
+	}
+	return s.Blocks
+}
+func (s *SlideNode) GetAssets() []*AssetSlot {
+	if s == nil {
+		return nil
+	}
+	return s.Assets
+}
+func (s *SlideNode) GetSpeakerNotes() string {
+	if s == nil {
+		return ""
+	}
+	return s.SpeakerNotes
+}
+func (s *SlideNode) GetBgColorHex() string {
+	if s == nil {
+		return ""
+	}
+	return s.BgColorHex
+}
+func (s *SlideNode) GetTokens() *DesignTokens {
+	if s == nil {
+		return nil
+	}
+	return s.Tokens
 }

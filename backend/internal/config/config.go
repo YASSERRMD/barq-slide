@@ -128,7 +128,9 @@ func defaults(k *koanf.Koanf) {
 // rawProvider is a minimal koanf provider for static map defaults.
 type rawProvider map[string]interface{}
 
-func (r rawProvider) Load() (map[string]interface{}, error) { return r, nil }
+func (r rawProvider) Load() (map[string]interface{}, error)  { return r, nil }
+func (r rawProvider) Read() (map[string]interface{}, error)  { return r, nil }
+func (r rawProvider) ReadBytes() ([]byte, error)             { return nil, nil }
 func (r rawProvider) Watch(_ func(event interface{}, err error)) error {
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/genai"
+	"google.golang.org/genai"
 )
 
 const (
@@ -32,7 +32,7 @@ func NewGeminiAdapter(cfg Config) (*GeminiAdapter, error) {
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey:  cfg.APIKey,
-		Backend: genai.BackendGoogleAI,
+		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("gemini: creating client: %w", err)

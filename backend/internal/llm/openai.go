@@ -147,22 +147,22 @@ func (o *OpenAICompatAdapter) GenerateStructured(ctx context.Context, req Genera
 		}
 	}
 
-	schemaBytes, err := json.Marshal(schemaObj)
-	if err != nil {
-		return nil, fmt.Errorf("%s: marshalling schema: %w", o.provider, err)
+	// Append a system-level schema hint so the model knows the exact structure.
+	if len(req.Schema) > 0 {
+		msgs = append([]openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: fmt.Sprintf("Respond ONLY with valid JSON matching this schema: %s", string(req.Schema)),
+		}}, msgs...)
 	}
 
 	chatReq := openai.ChatCompletionRequest{
 		Model:     o.model,
 		Messages:  msgs,
 		MaxTokens: maxTokens,
+		// json_object mode is the most broadly supported structured output
+		// mode across OpenAI-compatible providers (xAI, Minimax, OpenAI).
 		ResponseFormat: &openai.ChatCompletionResponseFormat{
-			Type: openai.ChatCompletionResponseFormatTypeJSONSchema,
-			JSONSchema: &openai.ChatCompletionResponseFormatJSONSchema{
-				Name:   toolName,
-				Schema: json.RawMessage(schemaBytes),
-				Strict: true,
-			},
+			Type: openai.ChatCompletionResponseFormatTypeJSONObject,
 		},
 	}
 

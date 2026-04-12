@@ -4,6 +4,7 @@ package render
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"sync"
 	"time"
@@ -87,12 +88,12 @@ func (p *TabPool) RenderHTML(ctx context.Context, html string) ([]byte, error) {
 
 	var pngBytes []byte
 
+	// Encode HTML as a data URI so the browser renders it locally.
+	dataURI := "data:text/html;base64," + base64.StdEncoding.EncodeToString([]byte(html))
+
 	tasks := chromedp.Tasks{
-		// Set data URI for the HTML content.
-		chromedp.Navigate("about:blank"),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			return chromedp.SetContent(html).Do(ctx)
-		}),
+		// Navigate directly to the data URI — no network round-trip needed.
+		chromedp.Navigate(dataURI),
 		// Set viewport to slide dimensions.
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return chromedp.EmulateViewport(

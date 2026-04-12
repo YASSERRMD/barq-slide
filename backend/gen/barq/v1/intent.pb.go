@@ -23,28 +23,157 @@ type IntentSpec struct {
 	CreatedAt          *timestamppb.Timestamp `json:"created_at,omitempty"`
 }
 
+func (i *IntentSpec) GetRequestID() string {
+	if i == nil {
+		return ""
+	}
+	return i.RequestID
+}
+func (i *IntentSpec) GetPrompt() string {
+	if i == nil {
+		return ""
+	}
+	return i.Prompt
+}
+func (i *IntentSpec) GetAudience() string {
+	if i == nil {
+		return ""
+	}
+	return i.Audience
+}
+func (i *IntentSpec) GetTone() string {
+	if i == nil {
+		return ""
+	}
+	return i.Tone
+}
+func (i *IntentSpec) GetDomain() string {
+	if i == nil {
+		return ""
+	}
+	return i.Domain
+}
+func (i *IntentSpec) GetSlideCount() int32 {
+	if i == nil {
+		return 0
+	}
+	return i.SlideCount
+}
+func (i *IntentSpec) GetLocale() string {
+	if i == nil {
+		return ""
+	}
+	return i.Locale
+}
+func (i *IntentSpec) GetDataAttachment() []byte {
+	if i == nil {
+		return nil
+	}
+	return i.DataAttachment
+}
+func (i *IntentSpec) GetDataAttachmentMime() string {
+	if i == nil {
+		return ""
+	}
+	return i.DataAttachmentMime
+}
+func (i *IntentSpec) GetLlmProvider() string {
+	if i == nil {
+		return ""
+	}
+	return i.LlmProvider
+}
+func (i *IntentSpec) GetLlmModel() string {
+	if i == nil {
+		return ""
+	}
+	return i.LlmModel
+}
+
 // NarrativeArc describes the high-level story structure of the deck.
 type NarrativeArc int32
 
 const (
-	NarrativeArc_NARRATIVE_ARC_UNSPECIFIED       NarrativeArc = 0
-	NarrativeArc_NARRATIVE_ARC_PROBLEM_SOLUTION  NarrativeArc = 1
-	NarrativeArc_NARRATIVE_ARC_BEFORE_AFTER      NarrativeArc = 2
-	NarrativeArc_NARRATIVE_ARC_DATA_STORY        NarrativeArc = 3
-	NarrativeArc_NARRATIVE_ARC_PITCH             NarrativeArc = 4
-	NarrativeArc_NARRATIVE_ARC_TUTORIAL          NarrativeArc = 5
-	NarrativeArc_NARRATIVE_ARC_REPORT            NarrativeArc = 6
+	NarrativeArc_NARRATIVE_ARC_UNSPECIFIED      NarrativeArc = 0
+	NarrativeArc_NARRATIVE_ARC_PROBLEM_SOLUTION NarrativeArc = 1
+	NarrativeArc_NARRATIVE_ARC_BEFORE_AFTER     NarrativeArc = 2
+	NarrativeArc_NARRATIVE_ARC_DATA_STORY       NarrativeArc = 3
+	NarrativeArc_NARRATIVE_ARC_PITCH            NarrativeArc = 4
+	NarrativeArc_NARRATIVE_ARC_TUTORIAL         NarrativeArc = 5
+	NarrativeArc_NARRATIVE_ARC_REPORT           NarrativeArc = 6
 )
+
+func (n NarrativeArc) String() string {
+	switch n {
+	case NarrativeArc_NARRATIVE_ARC_PROBLEM_SOLUTION:
+		return "problem_solution"
+	case NarrativeArc_NARRATIVE_ARC_BEFORE_AFTER:
+		return "before_after"
+	case NarrativeArc_NARRATIVE_ARC_DATA_STORY:
+		return "data_story"
+	case NarrativeArc_NARRATIVE_ARC_PITCH:
+		return "pitch"
+	case NarrativeArc_NARRATIVE_ARC_TUTORIAL:
+		return "tutorial"
+	case NarrativeArc_NARRATIVE_ARC_REPORT:
+		return "report"
+	default:
+		return "unspecified"
+	}
+}
 
 // DeckPlan is the high-level plan produced by the AI planner.
 type DeckPlan struct {
-	RequestID    string        `json:"request_id,omitempty"`
-	Title        string        `json:"title,omitempty"`
-	Subtitle     string        `json:"subtitle,omitempty"`
-	Arc          NarrativeArc  `json:"arc,omitempty"`
-	Sections     []*DeckSection `json:"sections,omitempty"`
-	TotalSlides  int32         `json:"total_slides,omitempty"`
-	TopicTags    []string      `json:"topic_tags,omitempty"`
+	RequestID   string         `json:"request_id,omitempty"`
+	Title       string         `json:"title,omitempty"`
+	Subtitle    string         `json:"subtitle,omitempty"`
+	Arc         NarrativeArc   `json:"arc,omitempty"`
+	Sections    []*DeckSection `json:"sections,omitempty"`
+	TotalSlides int32          `json:"total_slides,omitempty"`
+	TopicTags   []string       `json:"topic_tags,omitempty"`
+}
+
+func (d *DeckPlan) GetRequestID() string {
+	if d == nil {
+		return ""
+	}
+	return d.RequestID
+}
+func (d *DeckPlan) GetTitle() string {
+	if d == nil {
+		return ""
+	}
+	return d.Title
+}
+func (d *DeckPlan) GetSubtitle() string {
+	if d == nil {
+		return ""
+	}
+	return d.Subtitle
+}
+func (d *DeckPlan) GetArc() NarrativeArc {
+	if d == nil {
+		return NarrativeArc_NARRATIVE_ARC_UNSPECIFIED
+	}
+	return d.Arc
+}
+func (d *DeckPlan) GetSections() []*DeckSection {
+	if d == nil {
+		return nil
+	}
+	return d.Sections
+}
+func (d *DeckPlan) GetTotalSlides() int32 {
+	if d == nil {
+		return 0
+	}
+	return d.TotalSlides
+}
+func (d *DeckPlan) GetTopicTags() []string {
+	if d == nil {
+		return nil
+	}
+	return d.TopicTags
 }
 
 // DeckSection groups a set of slides under a logical chapter.
@@ -52,4 +181,23 @@ type DeckSection struct {
 	Index    int32    `json:"index,omitempty"`
 	Title    string   `json:"title,omitempty"`
 	SlideIDs []string `json:"slide_ids,omitempty"`
+}
+
+func (d *DeckSection) GetIndex() int32 {
+	if d == nil {
+		return 0
+	}
+	return d.Index
+}
+func (d *DeckSection) GetTitle() string {
+	if d == nil {
+		return ""
+	}
+	return d.Title
+}
+func (d *DeckSection) GetSlideIDs() []string {
+	if d == nil {
+		return nil
+	}
+	return d.SlideIDs
 }
