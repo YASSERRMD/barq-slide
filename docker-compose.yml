@@ -19,12 +19,17 @@ services:
       BARQ_LLM__OPENAI__BASE_URL: "https://api.openai.com/v1"
       BARQ_LOG__LEVEL: "info"
       BARQ_LOG__FORMAT: "json"
+    volumes:
+      - barq_data:/app/data
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
       interval: 10s
       timeout: 3s
       retries: 3
     restart: unless-stopped
+
+volumes:
+  barq_data:
 
   web:
     build:
