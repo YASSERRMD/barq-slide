@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { Download, FileDown, Loader2 } from "lucide-react";
+import { create } from "@bufbuild/protobuf";
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { ExportDeckRequestSchema, HeliosService } from "@/gen/barq/v1/service_pb";
 import { useDeckStore } from "@/lib/store/deck-store";
 
-/**
- * DownloadPPTX button triggers the ExportDeck server-streaming RPC,
- * accumulates chunked binary data, and initiates a file download
- * when all chunks are received.
- */
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
+const transport = createConnectTransport({ baseUrl: API_BASE_URL });
+const client = createClient(HeliosService, transport);
+
 export function DownloadPPTX() {
   const progress = useDeckStore((s) => s.progress);
   const requestId = useDeckStore((s) => s.requestId);
@@ -25,91 +28,37 @@ export function DownloadPPTX() {
     setIsExporting(true);
     setExportProgress(0);
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
-
     try {
-      // Build the active slide payload preserving order.
-      const slidesPayload = useDeckStore.getState().slideOrder
-        .map(id => useDeckStore.getState().slidesById[id])
-        .filter(Boolean);
-      const tokensPayload = useDeckStore.getState().tokens;
+      const state = useDeckStore.getState();
+      const slidesPayload = state.slideOrder
+        .map((id) => state.slidesById[id])
+        .filter(Boolean) as any[];
+      const tokensPayload = state.tokens as any;
 
-      // Protobuf v2 uses BigInt for int64 fields — JSON.stringify crashes on them.
-      const safeStringify = (v: unknown) =>
-        JSON.stringify(v, (_, val) => (typeof val === "bigint" ? Number(val) : val));
-
-      const res = await fetch(
-        `${baseUrl}/barq.v1.HeliosService/ExportDeck`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Connect-Protocol-Version": "1",
-          },
-          body: safeStringify({
-            requestId,
-            format: "pptx",
-            slides: slidesPayload,
-            tokens: tokensPayload,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        console.error("Export failed:", res.status);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) return;
+      const request = create(ExportDeckRequestSchema, {
+        requestId,
+        format: "pptx",
+        slides: slidesPayload,
+        tokens: tokensPayload,
+      });
 
       const chunks: Uint8Array[] = [];
-      const decoder = new TextDecoder();
-      let buffer = "";
       let totalBytes = 0;
       let filename = "barq-slides-deck.pptx";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      for await (const chunk of client.exportDeck(request)) {
+        if (chunk.filename) filename = chunk.filename;
+        if (chunk.totalBytes) totalBytes = Number(chunk.totalBytes);
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-
-          try {
-            const envelope = JSON.parse(trimmed);
-            const msg = envelope.result ?? envelope;
-
-            if (msg.totalBytes) totalBytes = msg.totalBytes;
-            if (msg.filename) filename = msg.filename;
-
-            // Data is base64-encoded in the JSON response.
-            if (msg.data) {
-              const binary = atob(msg.data);
-              const bytes = new Uint8Array(binary.length);
-              for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
-              }
-              chunks.push(bytes);
-
-              if (totalBytes > 0) {
-                const received = chunks.reduce((s, c) => s + c.length, 0);
-                setExportProgress(Math.min(100, Math.round((received / totalBytes) * 100)));
-              }
-            }
-          } catch {
-            // Partial JSON.
+        if (chunk.data && chunk.data.length > 0) {
+          chunks.push(chunk.data);
+          const received = chunks.reduce((s, c) => s + c.length, 0);
+          if (totalBytes > 0) {
+            setExportProgress(Math.min(100, Math.round((received / totalBytes) * 100)));
           }
         }
       }
 
-      // Assemble chunks into a blob and download.
       if (chunks.length > 0) {
         const blob = new Blob(chunks as BlobPart[], {
           type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -144,7 +93,7 @@ export function DownloadPPTX() {
         {isExporting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            {exportProgress > 0 ? `${exportProgress}%` : "Exporting..."}
+            {exportProgress > 0 ? `${exportProgress}%` : "Exporting…"}
           </>
         ) : (
           <>
