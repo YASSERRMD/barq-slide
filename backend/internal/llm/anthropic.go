@@ -47,7 +47,7 @@ func NewAnthropicAdapter(cfg Config) (*AnthropicAdapter, error) {
 		model = "claude-opus-4-6"
 	}
 
-	return &AnthropicAdapter{client: &client, model: model, cfg: cfg}, nil
+	return &AnthropicAdapter{client: client, model: model, cfg: cfg}, nil
 }
 
 // Name returns the provider identifier.
@@ -134,13 +134,16 @@ func (a *AnthropicAdapter) GenerateStructured(ctx context.Context, req GenerateS
 		inputSchema = map[string]interface{}{"type": "object"}
 	}
 
+	// Build the schema for the tool input — ToolParam.InputSchema is interface{}.
+	schemaMap := map[string]interface{}{
+		"type":       "object",
+		"properties": inputSchema,
+	}
+
 	tool := anthropic.ToolParam{
 		Name:        anthropic.F(toolName),
 		Description: anthropic.F(toolDesc),
-		InputSchema: anthropic.F(anthropic.ToolInputSchemaParam{
-			Type:       anthropic.F(anthropic.ToolInputSchemaTypeObject),
-			Properties: anthropic.F(inputSchema),
-		}),
+		InputSchema: anthropic.F[interface{}](schemaMap),
 	}
 
 	messages := toAnthropicMessages(req.Messages)
@@ -151,7 +154,7 @@ func (a *AnthropicAdapter) GenerateStructured(ctx context.Context, req GenerateS
 		Messages:  anthropic.F(messages),
 		Tools:     anthropic.F([]anthropic.ToolParam{tool}),
 		ToolChoice: anthropic.F[anthropic.ToolChoiceUnionParam](anthropic.ToolChoiceToolParam{
-			Type: anthropic.F(anthropic.ToolChoiceToolTypeToolChoice),
+			Type: anthropic.F(anthropic.ToolChoiceToolTypeTool),
 			Name: anthropic.F(toolName),
 		}),
 	}

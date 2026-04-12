@@ -294,7 +294,7 @@ The section should maintain narrative coherence within the %s arc.`,
 		parsed.Tone,
 		parsed.Domain,
 		strings.Join(plan.GetTopicTags(), ", "),
-		max(1, plan.GetTotalSlides()/int32(max(1, len(plan.GetSections())))),
+		max(int32(1), plan.GetTotalSlides()/max(int32(1), int32(len(plan.GetSections())))),
 		plan.GetArc().String(),
 	)
 }

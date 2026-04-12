@@ -28,11 +28,37 @@ type GenerateDeckRequest struct {
 	Intent *IntentSpec `json:"intent,omitempty"`
 }
 
+func (g *GenerateDeckRequest) GetIntent() *IntentSpec {
+	if g == nil {
+		return nil
+	}
+	return g.Intent
+}
+
 // RegenerateSlideRequest asks to regenerate a specific slide.
 type RegenerateSlideRequest struct {
 	RequestID   string `json:"request_id,omitempty"`
 	SlideID     string `json:"slide_id,omitempty"`
 	Instruction string `json:"instruction,omitempty"`
+}
+
+func (r *RegenerateSlideRequest) GetRequestID() string {
+	if r == nil {
+		return ""
+	}
+	return r.RequestID
+}
+func (r *RegenerateSlideRequest) GetSlideID() string {
+	if r == nil {
+		return ""
+	}
+	return r.SlideID
+}
+func (r *RegenerateSlideRequest) GetInstruction() string {
+	if r == nil {
+		return ""
+	}
+	return r.Instruction
 }
 
 // ExportDeckRequest asks to export a completed deck.
@@ -41,9 +67,29 @@ type ExportDeckRequest struct {
 	Format    string `json:"format,omitempty"`
 }
 
+func (e *ExportDeckRequest) GetRequestID() string {
+	if e == nil {
+		return ""
+	}
+	return e.RequestID
+}
+func (e *ExportDeckRequest) GetFormat() string {
+	if e == nil {
+		return ""
+	}
+	return e.Format
+}
+
 // GetDeckPlanRequest fetches the plan for a request.
 type GetDeckPlanRequest struct {
 	RequestID string `json:"request_id,omitempty"`
+}
+
+func (g *GetDeckPlanRequest) GetRequestID() string {
+	if g == nil {
+		return ""
+	}
+	return g.RequestID
 }
 
 // GenerateStreamResponse is the server-streaming response for deck generation.
@@ -62,6 +108,73 @@ type GenerateStreamResponse struct {
 	Timestamp    *timestamppb.Timestamp `json:"timestamp,omitempty"`
 }
 
+func (g *GenerateStreamResponse) GetRequestID() string {
+	if g == nil {
+		return ""
+	}
+	return g.RequestID
+}
+func (g *GenerateStreamResponse) GetEvent() GenerateStreamEvent {
+	if g == nil {
+		return GenerateStreamEvent_GENERATE_STREAM_EVENT_UNSPECIFIED
+	}
+	return g.Event
+}
+func (g *GenerateStreamResponse) GetMessage() string {
+	if g == nil {
+		return ""
+	}
+	return g.Message
+}
+func (g *GenerateStreamResponse) GetProgressPct() int32 {
+	if g == nil {
+		return 0
+	}
+	return g.ProgressPct
+}
+func (g *GenerateStreamResponse) GetPlan() *DeckPlan {
+	if g == nil {
+		return nil
+	}
+	return g.Plan
+}
+func (g *GenerateStreamResponse) GetTokens() *DesignTokens {
+	if g == nil {
+		return nil
+	}
+	return g.Tokens
+}
+func (g *GenerateStreamResponse) GetSlide() *SlideNode {
+	if g == nil {
+		return nil
+	}
+	return g.Slide
+}
+func (g *GenerateStreamResponse) GetSnapshotPng() []byte {
+	if g == nil {
+		return nil
+	}
+	return g.SnapshotPng
+}
+func (g *GenerateStreamResponse) GetSlides() []*SlideNode {
+	if g == nil {
+		return nil
+	}
+	return g.Slides
+}
+func (g *GenerateStreamResponse) GetErrorMessage() string {
+	if g == nil {
+		return ""
+	}
+	return g.ErrorMessage
+}
+func (g *GenerateStreamResponse) GetErrorCode() string {
+	if g == nil {
+		return ""
+	}
+	return g.ErrorCode
+}
+
 // ExportChunkResponse streams chunks of the exported file.
 type ExportChunkResponse struct {
 	TotalBytes int64  `json:"total_bytes,omitempty"`
@@ -71,8 +184,52 @@ type ExportChunkResponse struct {
 	Filename   string `json:"filename,omitempty"`
 }
 
+func (e *ExportChunkResponse) GetTotalBytes() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.TotalBytes
+}
+func (e *ExportChunkResponse) GetOffset() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.Offset
+}
+func (e *ExportChunkResponse) GetData() []byte {
+	if e == nil {
+		return nil
+	}
+	return e.Data
+}
+func (e *ExportChunkResponse) GetIsLast() bool {
+	if e == nil {
+		return false
+	}
+	return e.IsLast
+}
+func (e *ExportChunkResponse) GetFilename() string {
+	if e == nil {
+		return ""
+	}
+	return e.Filename
+}
+
 // GetDeckPlanResponse returns the deck plan.
 type GetDeckPlanResponse struct {
 	Plan   *DeckPlan     `json:"plan,omitempty"`
 	Tokens *DesignTokens `json:"tokens,omitempty"`
+}
+
+func (g *GetDeckPlanResponse) GetPlan() *DeckPlan {
+	if g == nil {
+		return nil
+	}
+	return g.Plan
+}
+func (g *GetDeckPlanResponse) GetTokens() *DesignTokens {
+	if g == nil {
+		return nil
+	}
+	return g.Tokens
 }

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"text/template"
+	"html/template"
 
 	barqv1 "github.com/YASSERRMD/barq-slides/gen/barq/v1"
 )
@@ -71,6 +71,7 @@ type deckTemplateData struct {
 
 var deckTemplate = template.Must(template.New("deck").Funcs(template.FuncMap{
 	"raw": func(s string) template.HTML { return template.HTML(s) }, //nolint:gosec
+	"add": func(a, b int) int { return a + b },
 }).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
