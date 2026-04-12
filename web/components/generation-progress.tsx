@@ -90,9 +90,14 @@ export function GenerationProgress() {
       </div>
 
       {/* Error message */}
-      {status === "error" && error && (
-        <div className="px-5 pb-4 text-xs text-red-500">
-          {error}
+      {status === "error" && (
+        <div className="px-5 pb-4 space-y-1">
+          {message && (
+            <p className="text-xs text-red-500 font-medium">{message}</p>
+          )}
+          {error && error !== message && (
+            <p className="text-xs text-muted-foreground font-mono break-all">{error}</p>
+          )}
         </div>
       )}
     </div>

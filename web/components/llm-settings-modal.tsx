@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDeckStore } from "@/lib/store/deck-store";
-import { Eye, EyeOff, Settings2, X } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Settings2, X } from "lucide-react";
 
 export function LlmSettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,14 +14,22 @@ export function LlmSettingsModal() {
   const llmBaseUrl = useDeckStore((s) => s.llmBaseUrl);
   const setLlmConfig = useDeckStore((s) => s.setLlmConfig);
 
+  const needsApiKey = llmProvider !== "ollama" && !llmApiKey;
+
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors"
+        className="relative flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors"
       >
         <Settings2 className="h-4 w-4" />
         Settings
+        {needsApiKey && (
+          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+          </span>
+        )}
       </button>
 
       {isOpen && (
@@ -33,8 +41,15 @@ export function LlmSettingsModal() {
             >
               <X className="h-4 w-4" />
             </button>
-            
+
             <h2 className="text-lg font-semibold text-foreground mb-4">LLM Configuration</h2>
+
+            {needsApiKey && (
+              <div className="flex items-start gap-2.5 mb-4 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-xs">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>No API key set — slides cannot be generated until you enter a valid key below.</span>
+              </div>
+            )}
             
             <div className="space-y-4">
               <div>
