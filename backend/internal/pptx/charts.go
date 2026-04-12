@@ -17,7 +17,7 @@ import (
 // Charts are rendered as labelled text boxes that preserve the data summary.
 // SVG chart bytes (produced by go-echarts) are embedded via AddSVGAssets.
 func AddChartAssets(_ *presentation.Presentation, slide presentation.Slide, node *barqv1.SlideNode, tokens *barqv1.DesignTokens) error {
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 	if !geo.HasMediaRegion {
 		return nil
 	}
@@ -36,7 +36,7 @@ func AddChartAssets(_ *presentation.Presentation, slide presentation.Slide, node
 		}
 
 		if err := addChartSummaryBox(slide, cd, asset, tokens, geo.Media); err != nil {
-			_ = fmt.Errorf("pptx: chart summary %s: %w (skipping)", asset.GetID(), err)
+			_ = fmt.Errorf("pptx: chart summary %s: %w (skipping)", asset.GetId(), err)
 		}
 	}
 	return nil
@@ -97,7 +97,7 @@ func addChartSummaryBox(
 // AddKPICards renders KPI blocks from a slide as styled card text boxes.
 // KPI data is encoded in body blocks as "label|value|delta" text.
 func AddKPICards(slide presentation.Slide, node *barqv1.SlideNode, tokens *barqv1.DesignTokens) error {
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 
 	var kpiBlocks []*barqv1.ContentBlock
 	for _, b := range node.GetBlocks() {

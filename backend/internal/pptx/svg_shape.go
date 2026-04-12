@@ -20,7 +20,7 @@ import (
 // AddSVGAssets iterates the slide's assets and embeds any SVG as an image
 // relationship positioned within the media region.
 func AddSVGAssets(prs *presentation.Presentation, slide presentation.Slide, node *barqv1.SlideNode) error {
-	geo := layout.Find(node.GetLayout().GetLayoutID())
+	geo := layout.Find(node.GetLayout().GetLayoutId())
 	if !geo.HasMediaRegion {
 		return nil
 	}
@@ -33,7 +33,7 @@ func AddSVGAssets(prs *presentation.Presentation, slide presentation.Slide, node
 		if strings.HasPrefix(asset.GetRenderedMime(), "image/svg") {
 			if err := embedSVGAsImage(prs, slide, asset, geo.Media); err != nil {
 				// Non-fatal — log and continue.
-				_ = fmt.Errorf("pptx: embed svg %s: %w (skipping)", asset.GetID(), err)
+				_ = fmt.Errorf("pptx: embed svg %s: %w (skipping)", asset.GetId(), err)
 			}
 		}
 	}

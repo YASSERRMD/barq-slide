@@ -161,6 +161,7 @@ export function SlideEditor() {
                 tokens={tokens}
                 scale={0.85}
                 className="transition-all duration-300"
+                isEditable={true}
               />
             )}
           </div>
