@@ -107,9 +107,9 @@ export function SlideEditor() {
                       : "border-transparent hover:border-border/60"
                   }`}
                 >
-                  {/* Clip container: 960*0.17 × 540*0.17 */}
-                  <div style={{ width: "163px", height: "92px", overflow: "hidden", position: "relative" }}>
-                    <SlideCanvas slide={s} tokens={tokens} scale={0.17} />
+                  {/* Clip container: 960*0.175 × 540*0.175 */}
+                  <div style={{ width: "168px", height: "95px", overflow: "hidden", position: "relative" }}>
+                    <SlideCanvas slide={s} tokens={tokens} scale={0.175} />
                     <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/50 text-white text-[9px] font-mono">
                       {idx + 1}
                     </div>
@@ -153,14 +153,14 @@ export function SlideEditor() {
             )}
           </div>
 
-          {/* Canvas — clip container: 960*0.72 × 540*0.72 */}
+          {/* Canvas — clip container: 960*0.74 × 540*0.74 */}
           <div className="flex-1 flex items-center justify-center rounded-b-xl border border-border/50 bg-muted/20 overflow-hidden p-4">
             {selectedSlide && (
-              <div style={{ width: "691px", height: "389px", overflow: "hidden", flexShrink: 0 }}>
+              <div style={{ width: "710px", height: "400px", overflow: "hidden", flexShrink: 0, borderRadius: "8px", boxShadow: "0 4px 24px rgba(0,0,0,0.12)" }}>
                 <SlideCanvas
                   slide={selectedSlide}
                   tokens={tokens}
-                  scale={0.72}
+                  scale={0.74}
                   isEditable={true}
                 />
               </div>
