@@ -6,7 +6,7 @@ import type { ServiceType } from "@bufbuild/protobuf";
 // The API base URL is injected at build time via NEXT_PUBLIC_API_BASE_URL.
 // Falls back to localhost for local development.
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
 
 /**
  * A reusable Connect transport configured for the barq-slides backend.
