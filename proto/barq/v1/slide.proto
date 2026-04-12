@@ -1,0 +1,216 @@
+syntax = "proto3";
+
+package barq.v1;
+
+option go_package = "github.com/YASSERRMD/barq-slides/gen/barq/v1;barqv1";
+
+// SlideRole classifies the slide's function in the narrative.
+enum SlideRole {
+  SLIDE_ROLE_UNSPECIFIED = 0;
+  SLIDE_ROLE_TITLE = 1;
+  SLIDE_ROLE_SECTION_DIVIDER = 2;
+  SLIDE_ROLE_CONTENT = 3;
+  SLIDE_ROLE_DATA = 4;
+  SLIDE_ROLE_DIAGRAM = 5;
+  SLIDE_ROLE_IMAGE_HERO = 6;
+  SLIDE_ROLE_QUOTE = 7;
+  SLIDE_ROLE_KPI = 8;
+  SLIDE_ROLE_TIMELINE = 9;
+  SLIDE_ROLE_COMPARISON = 10;
+  SLIDE_ROLE_CLOSING = 11;
+}
+
+// LayoutID enumerates all named layout templates.
+enum LayoutID {
+  LAYOUT_ID_UNSPECIFIED = 0;
+  LAYOUT_ID_TITLE_CENTER = 1;
+  LAYOUT_ID_TITLE_LEFT = 2;
+  LAYOUT_ID_HERO_IMAGE = 3;
+  LAYOUT_ID_TWO_COLUMN = 4;
+  LAYOUT_ID_THREE_COLUMN = 5;
+  LAYOUT_ID_BULLET_LIST = 6;
+  LAYOUT_ID_NUMBERED_LIST = 7;
+  LAYOUT_ID_QUOTE_FULL = 8;
+  LAYOUT_ID_KPI_CARDS = 9;
+  LAYOUT_ID_CHART_FULL = 10;
+  LAYOUT_ID_CHART_WITH_TEXT = 11;
+  LAYOUT_ID_DIAGRAM_FULL = 12;
+  LAYOUT_ID_TIMELINE_HORIZONTAL = 13;
+  LAYOUT_ID_TIMELINE_VERTICAL = 14;
+  LAYOUT_ID_SECTION_DIVIDER = 15;
+  LAYOUT_ID_COMPARISON_TABLE = 16;
+  LAYOUT_ID_IMAGE_GRID = 17;
+  LAYOUT_ID_ICON_GRID = 18;
+  LAYOUT_ID_PROCESS_FLOW = 19;
+  LAYOUT_ID_CLOSING = 20;
+}
+
+// ContentBlock is a single text/data region on a slide.
+message ContentBlock {
+  // Unique block identifier within the slide.
+  string id = 1;
+
+  // Block role hint (e.g., "heading", "body", "caption", "kpi_value").
+  string role = 2;
+
+  // Rendered text content (may include basic markdown).
+  string text = 3;
+
+  // Emphasis level 0 (normal) – 3 (strong).
+  int32 emphasis = 4;
+}
+
+// AssetSlot describes a placeholder for a visual asset on a slide.
+message AssetSlot {
+  // Unique slot ID within the slide.
+  string id = 1;
+
+  // Type of asset expected.
+  AssetType type = 2;
+
+  // Semantic query for asset resolution (e.g., "bar chart of revenue 2020-2024").
+  string query = 3;
+
+  // For chart assets: structured data payload (JSON).
+  string chart_data_json = 4;
+
+  // For diagram assets: Mermaid DSL source.
+  string mermaid_source = 5;
+
+  // For icon assets: resolved icon name.
+  string icon_name = 6;
+
+  // For image assets: resolved URL or local path.
+  string image_url = 7;
+
+  // Final rendered asset as SVG or PNG bytes.
+  bytes rendered_bytes = 8;
+
+  // MIME type of rendered_bytes.
+  string rendered_mime = 9;
+
+  // EMU bounding box: x, y, width, height.
+  int64 emu_x = 10;
+  int64 emu_y = 11;
+  int64 emu_width = 12;
+  int64 emu_height = 13;
+}
+
+// AssetType classifies the kind of visual asset in a slot.
+enum AssetType {
+  ASSET_TYPE_UNSPECIFIED = 0;
+  ASSET_TYPE_ICON = 1;
+  ASSET_TYPE_CHART_BAR = 2;
+  ASSET_TYPE_CHART_LINE = 3;
+  ASSET_TYPE_CHART_PIE = 4;
+  ASSET_TYPE_CHART_SCATTER = 5;
+  ASSET_TYPE_DIAGRAM_FLOWCHART = 6;
+  ASSET_TYPE_DIAGRAM_SEQUENCE = 7;
+  ASSET_TYPE_DIAGRAM_MINDMAP = 8;
+  ASSET_TYPE_DIAGRAM_GANTT = 9;
+  ASSET_TYPE_PHOTO = 10;
+  ASSET_TYPE_ILLUSTRATION = 11;
+}
+
+// SlideLayout specifies the visual geometry of a slide.
+message SlideLayout {
+  // Which named layout template to use.
+  LayoutID layout_id = 1;
+
+  // Number of content columns (for multi-column layouts).
+  int32 column_count = 2;
+
+  // True if the layout has a prominent image/media region.
+  bool has_media_region = 3;
+
+  // True if background is dark (inverts foreground tokens).
+  bool is_dark_background = 4;
+}
+
+// SlideNode is a fully-resolved slide ready for both render paths.
+message SlideNode {
+  // Globally unique slide ID.
+  string id = 1;
+
+  // Parent request ID.
+  string request_id = 2;
+
+  // Zero-based position in the deck.
+  int32 index = 3;
+
+  // Narrative role of this slide.
+  SlideRole role = 4;
+
+  // Assigned layout.
+  SlideLayout layout = 5;
+
+  // Ordered text content blocks.
+  repeated ContentBlock blocks = 6;
+
+  // Asset slots (charts, diagrams, icons, photos).
+  repeated AssetSlot assets = 7;
+
+  // Speaker notes.
+  string speaker_notes = 8;
+
+  // Hex background color override (empty = use token default).
+  string bg_color_hex = 9;
+
+  // Design tokens applied to this slide (may override deck-level tokens).
+  DesignTokens tokens = 10;
+}
+
+// Typography defines a font stack for a semantic text role.
+message Typography {
+  string font_family = 1;
+  double size_pt = 2;
+  int32 weight = 3;
+  double line_height = 4;
+  double letter_spacing_em = 5;
+  bool is_uppercase = 6;
+}
+
+// DesignTokens is the deterministic design system for a deck.
+message DesignTokens {
+  // Primary brand color (hex, e.g., "#1A73E8").
+  string primary_hex = 1;
+
+  // Secondary accent color.
+  string secondary_hex = 2;
+
+  // Background color.
+  string background_hex = 3;
+
+  // Surface color (cards, panels).
+  string surface_hex = 4;
+
+  // On-primary text color (WCAG AA compliant).
+  string on_primary_hex = 5;
+
+  // On-background text color.
+  string on_background_hex = 6;
+
+  // Muted / caption text color.
+  string muted_hex = 7;
+
+  // Heading typography.
+  Typography heading = 8;
+
+  // Subheading typography.
+  Typography subheading = 9;
+
+  // Body text typography.
+  Typography body = 10;
+
+  // Caption / label typography.
+  Typography caption = 11;
+
+  // Border radius in EMU (converted to pt for HTML).
+  int32 border_radius_emu = 12;
+
+  // Gutter spacing in EMU.
+  int32 gutter_emu = 13;
+
+  // Theme mood name (e.g., "corporate", "creative", "academic").
+  string mood = 14;
+}
