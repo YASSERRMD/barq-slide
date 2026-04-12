@@ -2,6 +2,7 @@
 
 import { PromptInput } from "@/components/prompt-input";
 import { TerminalProgress } from "@/components/terminal-progress";
+import { SlideEditor } from "@/components/slide-editor";
 import { useDeckStore } from "@/lib/store/deck-store";
 import { Zap } from "lucide-react";
 
@@ -39,6 +40,9 @@ export default function HomePage() {
           {slideCount} slide{slideCount !== 1 ? "s" : ""} generated
         </div>
       )}
+
+      {/* Slide Editor */}
+      <SlideEditor />
     </main>
   );
 }
