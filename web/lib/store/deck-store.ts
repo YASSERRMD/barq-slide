@@ -213,6 +213,7 @@ export const useDeckStore = create<DeckState>()(
           set({
             slidesById,
             slideOrder,
+            selectedSlideIndex: 0,
             progress: { status: "completed", message: "Deck ready", progressPct: 100 },
           });
         },
