@@ -130,11 +130,13 @@ export function useGenerateDeck() {
             if (msg.message) store.setProgress({ message: msg.message });
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Network error";
+      const code = (err as Record<string, unknown>)?.code;
       useDeckStore.getState().setProgress({
         status: "error",
-        message: err?.message ?? "Network error",
-        error: err?.code ?? "NETWORK_ERROR",
+        message,
+        error: typeof code === "string" ? code : "NETWORK_ERROR",
       });
     }
   };
