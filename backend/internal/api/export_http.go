@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -82,11 +83,21 @@ func HandleExportHTTP(w http.ResponseWriter, r *http.Request) {
 
 	filename := "barq-slides.pptx"
 	if body.RequestID != "" {
-		filename = fmt.Sprintf("barq-slides-%s.pptx", body.RequestID)
+		// Sanitize: keep only alphanumeric and hyphen chars (UUID-safe characters)
+		// to prevent Content-Disposition header injection.
+		safeID := strings.Map(func(r rune) rune {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' {
+				return r
+			}
+			return -1
+		}, body.RequestID)
+		if safeID != "" {
+			filename = fmt.Sprintf("barq-slides-%s.pptx", safeID)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", buf.Len()))
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
