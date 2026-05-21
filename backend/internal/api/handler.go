@@ -123,25 +123,15 @@ func (h *Handler) ExportDeck(
 		return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to initialize assembler: %w", err))
 	}
 
-	pr := asm.Presentation()
 	for _, node := range slides {
-		if err := pptx.AddSlide(pr, node, tokens); err != nil {
+		if err := asm.AddSlide(node, tokens); err != nil {
 			return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to add slide %d: %w", node.GetIndex(), err))
-		}
-		
-		// If KPI Cards layout, process charts
-		if node.GetLayout() != nil && node.GetLayout().GetLayoutId() == barqv1.LayoutID_LAYOUT_ID_KPI_CARDS {
-			addedSlides := pr.Slides()
-			lastSlide := addedSlides[len(addedSlides)-1]
-			if err := pptx.AddKPICards(lastSlide, node, tokens); err != nil {
-				h.log.Warn("failed to add KPI cards", slog.Any("err", err))
-			}
 		}
 	}
 
 	// 2. Save directly to an in-memory buffer
 	var buf bytes.Buffer
-	if err := pr.Save(&buf); err != nil {
+	if err := asm.Save(&buf); err != nil {
 		return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save presentation: %w", err))
 	}
 

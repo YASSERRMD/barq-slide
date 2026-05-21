@@ -56,6 +56,7 @@ func main() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	})))
+	mux.Handle("/api/export", withCORS(cfg.Server.CORSAllowOrigin, http.HandlerFunc(api.HandleExportHTTP)))
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/readyz", healthHandler)
 
