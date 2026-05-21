@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Download, FileDown, Loader2 } from "lucide-react";
 import { useDeckStore } from "@/lib/store/deck-store";
 
@@ -15,11 +15,17 @@ export function DownloadPPTX() {
   const [isExporting, setIsExporting]       = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [error, setError]                   = useState<string | null>(null);
+  const abortRef                            = useRef<AbortController | null>(null);
 
   const isReady = progress.status === "completed" && slideCount > 0;
 
   const handleExport = async () => {
-    if (!requestId || isExporting) return;
+    if (!requestId) return;
+
+    // Cancel any in-flight export before starting a new one.
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+
     setIsExporting(true);
     setExportProgress(0);
     setError(null);
@@ -45,6 +51,7 @@ export function DownloadPPTX() {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ requestId, slides, tokens }, bigintReplacer),
+        signal:  abortRef.current.signal,
       });
 
       if (!resp.ok) {
@@ -71,6 +78,7 @@ export function DownloadPPTX() {
 
       setExportProgress(100);
     } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
       console.error("Export error:", err);
       setError(err instanceof Error ? err.message : "Export failed");
     } finally {
