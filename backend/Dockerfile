@@ -15,12 +15,14 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM alpine:3.19
 
 RUN apk add --no-cache ca-certificates chromium font-noto \
-    && adduser -D -u 1000 barq
+    && adduser -D -u 1000 barq \
+    && mkdir -p /app/data \
+    && chown -R barq:barq /app
 
 COPY --from=builder /bin/barq-server /usr/local/bin/barq-server
 
 # Copy bundled assets (fonts, icons, illustrations).
-COPY assets/ /app/assets/
+COPY --chown=barq:barq assets/ /app/assets/
 
 USER barq
 WORKDIR /app
