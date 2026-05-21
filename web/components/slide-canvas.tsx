@@ -1,8 +1,17 @@
 "use client";
 
-import { useMemo, FocusEvent, KeyboardEvent } from "react";
+import { FocusEvent, KeyboardEvent } from "react";
 import type { SlideNode, ContentBlock, DesignTokens } from "@/lib/store/deck-store";
 import { useDeckStore } from "@/lib/store/deck-store";
+
+// ─── Proto LayoutID constants (must match slide.proto enum) ──────────────────
+const LAYOUT_TITLE_CENTER   = 1;
+const LAYOUT_BULLET_LIST    = 6;
+const LAYOUT_QUOTE_FULL     = 8;
+const LAYOUT_KPI_CARDS      = 9;
+const LAYOUT_TWO_COLUMN     = 4;
+const LAYOUT_SECTION_DIV    = 15;
+const LAYOUT_CLOSING        = 20;
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -31,19 +40,19 @@ function hexBrightness(hex: string) {
  * with overflow:hidden so the CSS-transformed canvas is properly cropped.
  */
 export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditable = false }: SlideCanvasProps) {
-  const layoutId = slide.layout?.layoutId ?? 1;
+  const layoutId = slide.layout?.layoutId ?? LAYOUT_BULLET_LIST;
 
-  const primary   = tokens?.primaryHex      || "#4F46E5";
-  const secondary = tokens?.secondaryHex    || "#10B981";
-  const bg        = slide.bgColorHex || tokens?.backgroundHex || "#FFFFFF";
-  const onBg      = tokens?.onBackgroundHex || "#111827";
-  const muted     = tokens?.mutedHex        || "#6B7280";
-  const surface   = tokens?.surfaceHex      || "#F9FAFB";
+  const primary    = tokens?.primaryHex      || "#4F46E5";
+  const secondary  = tokens?.secondaryHex    || "#10B981";
+  const bg         = slide.bgColorHex || tokens?.backgroundHex || "#FFFFFF";
+  const onBg       = tokens?.onBackgroundHex || "#111827";
+  const muted      = tokens?.mutedHex        || "#6B7280";
+  const surface    = tokens?.surfaceHex      || "#F9FAFB";
 
-  const isDark    = hexBrightness(bg) < 128;
-  const textColor = isDark ? "#FFFFFF" : onBg;
+  const isDark     = hexBrightness(bg) < 128;
+  const textColor  = isDark ? "#FFFFFF" : onBg;
   const mutedColor = isDark ? "rgba(255,255,255,0.55)" : muted;
-  const cardBg    = isDark ? "rgba(255,255,255,0.08)" : surface;
+  const cardBg     = isDark ? "rgba(255,255,255,0.10)" : surface;
 
   const headingFont = tokens?.heading?.fontFamily || "Inter, sans-serif";
   const bodyFont    = tokens?.body?.fontFamily    || "Inter, sans-serif";
@@ -51,15 +60,16 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditab
   const subSize     = tokens?.subheading?.sizePt  || 20;
   const bodySize    = tokens?.body?.sizePt        || 15;
 
-  // Group blocks by role
-  const title    = slide.blocks.find(b => b.role === "title"    || b.role === "heading");
-  const subtitle = slide.blocks.find(b => b.role === "subtitle" || b.role === "subheading");
-  const bodies   = slide.blocks.filter(b =>
-    b.role !== "title" && b.role !== "heading" &&
-    b.role !== "subtitle" && b.role !== "subheading"
-  );
+  // Block helpers
+  const title      = slide.blocks.find(b => b.role === "heading"   || b.role === "title");
+  const subtitle   = slide.blocks.find(b => b.role === "subheading"|| b.role === "subtitle");
+  const bullets    = slide.blocks.filter(b => b.role === "bullet");
+  const kpiBlocks  = slide.blocks.filter(b => b.role === "kpi_value");
+  const quoteBlock = slide.blocks.find(b => b.role === "quote");
+  const attrBlock  = slide.blocks.find(b => b.role === "attribution");
 
-  // Wrapper: always 960×540; caller clips with overflow:hidden
+  const updateBlockText = useDeckStore.getState().updateBlockText;
+
   const wrap: React.CSSProperties = {
     position: "relative",
     width: "960px",
@@ -74,27 +84,25 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditab
     transformOrigin: "top left",
   };
 
-  const updateBlockText = useDeckStore.getState().updateBlockText;
-
-  // ── TITLE / COVER (1, 9) ──────────────────────────────────────────────────
-  if (layoutId === 1 || layoutId === 9) {
+  // ── TITLE / COVER ─────────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_TITLE_CENTER) {
     return (
       <div className={className} style={wrap}>
-        {/* Gradient top bar */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "6px", background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
-        {/* Bottom-right decorative circles */}
-        <div style={{ position: "absolute", bottom: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: primary, opacity: 0.07 }} />
-        <div style={{ position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: secondary, opacity: 0.09 }} />
+        {/* Decorative circles */}
+        <div style={{ position: "absolute", bottom: -100, right: -100, width: 380, height: 380, borderRadius: "50%", background: primary, opacity: 0.07 }} />
+        <div style={{ position: "absolute", bottom: -50, right: -50, width: 240, height: 240, borderRadius: "50%", background: secondary, opacity: 0.09 }} />
+        <div style={{ position: "absolute", top: -80, left: -80, width: 300, height: 300, borderRadius: "50%", background: secondary, opacity: 0.05 }} />
 
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "72px 88px" }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "72px 96px" }}>
           {title && (
             <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
-              style={{ fontFamily: headingFont, fontSize: `${headingSize + 8}px`, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.025em", color: textColor, marginBottom: "16px" }} />
+              style={{ fontFamily: headingFont, fontSize: `${headingSize + 10}px`, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.03em", color: textColor, marginBottom: "14px" }} />
           )}
-          <div style={{ width: 56, height: 4, background: primary, borderRadius: 2, marginBottom: 20 }} />
+          <div style={{ width: 64, height: 5, background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 3, marginBottom: 22 }} />
           {subtitle && (
             <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
-              style={{ fontSize: `${subSize}px`, fontWeight: 400, color: mutedColor, lineHeight: 1.5, maxWidth: 560 }} />
+              style={{ fontSize: `${subSize + 2}px`, fontWeight: 400, color: mutedColor, lineHeight: 1.5, maxWidth: 580 }} />
           )}
         </div>
         <SlideNum n={slide.index} color={mutedColor} />
@@ -102,26 +110,118 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditab
     );
   }
 
-  // ── TWO-COLUMN (3, 12) ────────────────────────────────────────────────────
-  if (layoutId === 3 || layoutId === 12) {
-    const half  = Math.ceil(bodies.length / 2);
-    const left  = bodies.slice(0, half);
-    const right = bodies.slice(half);
+  // ── SECTION DIVIDER ───────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_SECTION_DIV) {
+    return (
+      <div className={className} style={{ ...wrap, backgroundColor: primary }}>
+        {/* Full-bleed gradient overlay */}
+        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, opacity: 0.95 }} />
+        {/* Large decorative number */}
+        <div style={{ position: "absolute", right: 60, top: "50%", transform: "translateY(-50%)", fontSize: "200px", fontWeight: 900, color: "rgba(255,255,255,0.06)", lineHeight: 1, userSelect: "none", fontFamily: headingFont }}>
+          {slide.index}
+        </div>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "72px 88px", zIndex: 1 }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", marginBottom: 20 }}>
+            SECTION
+          </div>
+          {title && (
+            <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontFamily: headingFont, fontSize: `${headingSize + 6}px`, fontWeight: 800, lineHeight: 1.15, color: "#FFFFFF", marginBottom: 16 }} />
+          )}
+          {subtitle && (
+            <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontSize: `${subSize - 2}px`, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }} />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── TWO COLUMN ────────────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_TWO_COLUMN) {
+    // Split bullet blocks: first half left, second half right
+    const half  = Math.ceil(bullets.length / 2);
+    const leftB = bullets.slice(0, half);
+    const rightB = bullets.slice(half);
     return (
       <div className={className} style={wrap}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "5px", background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "48px 56px 40px" }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "44px 52px 36px" }}>
           {title && (
             <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
-              style={{ fontFamily: headingFont, fontSize: `${headingSize - 4}px`, fontWeight: 700, color: textColor, marginBottom: 6, lineHeight: 1.2 }} />
+              style={{ fontFamily: headingFont, fontSize: `${headingSize - 4}px`, fontWeight: 700, color: textColor, marginBottom: 4, lineHeight: 1.2 }} />
+          )}
+          {subtitle && (
+            <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontSize: `${bodySize}px`, color: mutedColor, marginBottom: 20 }} />
+          )}
+          {!subtitle && <div style={{ height: 16 }} />}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, flex: 1, minHeight: 0 }}>
+            <TwoColPanel blocks={leftB} slide={slide} accentColor={primary} cardBg={cardBg} textColor={textColor} bodySize={bodySize} isEditable={isEditable} update={updateBlockText} />
+            <TwoColPanel blocks={rightB} slide={slide} accentColor={secondary} cardBg={cardBg} textColor={textColor} bodySize={bodySize} isEditable={isEditable} update={updateBlockText} />
+          </div>
+        </div>
+        <SlideNum n={slide.index} color={mutedColor} />
+      </div>
+    );
+  }
+
+  // ── QUOTE ─────────────────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_QUOTE_FULL) {
+    const qt = quoteBlock || bullets[0];
+    const at = attrBlock || subtitle;
+    return (
+      <div className={className} style={wrap}>
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 8, background: `linear-gradient(180deg, ${primary}, ${secondary})` }} />
+        <div style={{ position: "absolute", top: -20, right: -20, width: 320, height: 320, borderRadius: "50%", background: primary, opacity: 0.04 }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "64px 88px" }}>
+          <div style={{ fontSize: 140, lineHeight: 0.6, color: primary, opacity: 0.12, fontFamily: "Georgia, serif", marginBottom: 24, userSelect: "none" }}>"</div>
+          {qt && (
+            <Editable slideId={slide.id} block={qt} index={slide.blocks.indexOf(qt)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontFamily: headingFont, fontSize: `${headingSize - 4}px`, fontStyle: "italic", fontWeight: 500, color: textColor, lineHeight: 1.45, marginBottom: 32 }} />
+          )}
+          {at && (
+            <Editable slideId={slide.id} block={at} index={slide.blocks.indexOf(at)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontSize: `${bodySize}px`, color: primary, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }} />
+          )}
+        </div>
+        <SlideNum n={slide.index} color={mutedColor} />
+      </div>
+    );
+  }
+
+  // ── KPI CARDS ─────────────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_KPI_CARDS) {
+    const kpis = kpiBlocks.length > 0 ? kpiBlocks : bullets;
+    return (
+      <div className={className} style={wrap}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "5px", background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 300, height: 300, borderRadius: "50%", background: secondary, opacity: 0.06 }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "44px 52px 40px" }}>
+          {title && (
+            <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontFamily: headingFont, fontSize: `${headingSize - 6}px`, fontWeight: 700, color: textColor, marginBottom: 8, lineHeight: 1.2 }} />
           )}
           {subtitle && (
             <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
               style={{ fontSize: `${bodySize}px`, color: mutedColor, marginBottom: 24 }} />
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, flex: 1 }}>
-            <Column blocks={left} slide={slide} tokens={tokens} primary={primary} cardBg={cardBg} textColor={textColor} accentColor={primary} isEditable={isEditable} update={updateBlockText} bodySize={bodySize} />
-            <Column blocks={right} slide={slide} tokens={tokens} primary={secondary} cardBg={cardBg} textColor={textColor} accentColor={secondary} isEditable={isEditable} update={updateBlockText} bodySize={bodySize} />
+          {!subtitle && <div style={{ height: 16 }} />}
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(kpis.length, 4)}, 1fr)`, gap: 16, flex: 1, alignItems: "stretch" }}>
+            {kpis.map((block, i) => {
+              const parts = block.text.split("|");
+              const label = parts[0] || block.text;
+              const value = parts[1] || "";
+              const delta = parts[2] || "";
+              const accent = i % 2 === 0 ? primary : secondary;
+              return (
+                <div key={block.id || i} style={{ background: cardBg, borderRadius: 12, padding: "20px 18px", borderTop: `4px solid ${accent}`, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: `${bodySize - 1}px`, color: mutedColor, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+                  <div style={{ fontSize: "38px", fontWeight: 800, color: accent, fontFamily: headingFont, lineHeight: 1.1 }}>{value}</div>
+                  {delta && <div style={{ fontSize: `${bodySize - 1}px`, color: delta.startsWith("+") || delta.startsWith("↑") ? "#10B981" : delta.startsWith("-") || delta.startsWith("↓") ? "#EF4444" : mutedColor, fontWeight: 700, marginTop: 6 }}>{delta}</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
         <SlideNum n={slide.index} color={mutedColor} />
@@ -129,66 +229,61 @@ export function SlideCanvas({ slide, tokens, scale = 1, className = "", isEditab
     );
   }
 
-  // ── QUOTE (11) ────────────────────────────────────────────────────────────
-  if (layoutId === 11) {
-    const quoteBlock = title || bodies[0];
-    const attrBlock  = subtitle || bodies[1];
+  // ── CLOSING ───────────────────────────────────────────────────────────────
+  if (layoutId === LAYOUT_CLOSING) {
     return (
-      <div className={className} style={wrap}>
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 8, background: `linear-gradient(180deg, ${primary}, ${secondary})` }} />
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "64px 80px" }}>
-          <div style={{ fontSize: 120, lineHeight: 0.7, color: primary, opacity: 0.15, fontFamily: "Georgia, serif", marginBottom: 16, userSelect: "none" }}>"</div>
-          {quoteBlock && (
-            <Editable slideId={slide.id} block={quoteBlock} index={slide.blocks.indexOf(quoteBlock)} isEditable={isEditable} update={updateBlockText}
-              style={{ fontFamily: headingFont, fontSize: `${headingSize - 6}px`, fontStyle: "italic", fontWeight: 500, color: textColor, lineHeight: 1.4, marginBottom: 28 }} />
+      <div className={className} style={{ ...wrap, background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)` }}>
+        <div style={{ position: "absolute", top: -120, left: -120, width: 400, height: 400, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "72px 96px" }}>
+          {title && (
+            <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontFamily: headingFont, fontSize: `${headingSize + 8}px`, fontWeight: 800, color: "#FFFFFF", marginBottom: 16, lineHeight: 1.1 }} />
           )}
-          {attrBlock && (
-            <Editable slideId={slide.id} block={attrBlock} index={slide.blocks.indexOf(attrBlock)} isEditable={isEditable} update={updateBlockText}
-              style={{ fontSize: `${bodySize - 1}px`, color: primary, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }} />
+          <div style={{ width: 80, height: 4, background: "rgba(255,255,255,0.5)", borderRadius: 2, marginBottom: 20 }} />
+          {subtitle && (
+            <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
+              style={{ fontSize: `${subSize}px`, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }} />
           )}
         </div>
-        <SlideNum n={slide.index} color={mutedColor} />
       </div>
     );
   }
 
-  // ── DEFAULT: title + body list ────────────────────────────────────────────
+  // ── DEFAULT: BULLET LIST ──────────────────────────────────────────────────
   return (
     <div className={className} style={wrap}>
-      {/* Top gradient bar */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "5px", background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
-      {/* Subtle decoration */}
       <div style={{ position: "absolute", top: -60, right: -60, width: 280, height: 280, borderRadius: "50%", background: primary, opacity: 0.04 }} />
 
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "52px 64px 44px" }}>
-        {/* Title + accent */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "48px 60px 40px" }}>
         {title && (
-          <div style={{ marginBottom: 8 }}>
+          <div style={{ marginBottom: 10 }}>
             <Editable slideId={slide.id} block={title} index={slide.blocks.indexOf(title)} isEditable={isEditable} update={updateBlockText}
               style={{ fontFamily: headingFont, fontSize: `${headingSize - 4}px`, fontWeight: 700, color: textColor, lineHeight: 1.2, letterSpacing: "-0.01em" }} />
-            <div style={{ width: 40, height: 3, background: primary, borderRadius: 2, marginTop: 10 }} />
+            <div style={{ width: 44, height: 3, background: primary, borderRadius: 2, marginTop: 10 }} />
           </div>
         )}
         {subtitle && (
           <Editable slideId={slide.id} block={subtitle} index={slide.blocks.indexOf(subtitle)} isEditable={isEditable} update={updateBlockText}
-            style={{ fontSize: `${bodySize}px`, color: mutedColor, marginBottom: 20, marginTop: 4 }} />
+            style={{ fontSize: `${bodySize}px`, color: mutedColor, marginBottom: 16, marginTop: 4 }} />
         )}
 
-        {/* Body content */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
-          {bodies.map((block, i) => (
-            <BodyItem
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, overflow: "hidden", marginTop: subtitle ? 0 : 8 }}>
+          {bullets.map((block, i) => (
+            <BulletItem
               key={block.id || i}
               slideId={slide.id}
               block={block}
               index={slide.blocks.indexOf(block)}
               primary={primary}
-              cardBg={cardBg}
+              secondary={secondary}
               textColor={textColor}
               mutedColor={mutedColor}
               bodySize={bodySize}
               isEditable={isEditable}
               update={updateBlockText}
+              bulletIndex={i}
             />
           ))}
         </div>
@@ -232,84 +327,73 @@ function Editable({ slideId, block, index, isEditable, style, update }: Editable
   );
 }
 
-interface BodyItemProps {
+interface BulletItemProps {
   slideId: string;
   block: ContentBlock;
   index: number;
   primary: string;
-  cardBg: string;
+  secondary: string;
   textColor: string;
   mutedColor: string;
   bodySize: number;
   isEditable: boolean;
+  bulletIndex: number;
   update: (sid: string, bid: string, bi: number, t: string) => void;
 }
 
-function BodyItem({ slideId, block, index, primary, cardBg, textColor, mutedColor, bodySize, isEditable, update }: BodyItemProps) {
-  const role = block.role || "body";
-
-  if (role === "bullet") {
-    const lines = block.text.split("\n").filter(Boolean);
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {lines.map((line, li) => (
-          <div key={li} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: primary, marginTop: 6, flexShrink: 0 }} />
-            <div
-              contentEditable={isEditable ? "plaintext-only" : false}
-              suppressContentEditableWarning
-              style={{ fontSize: `${bodySize}px`, color: textColor, lineHeight: 1.65, flex: 1, outline: "none" }}
-              onBlur={(e) => {
-                if (!isEditable) return;
-                const lines2 = block.text.split("\n");
-                lines2[li] = e.currentTarget.innerText.trim();
-                update(slideId, block.id, index, lines2.join("\n"));
-              }}
-            >
-              {line}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (block.emphasis > 1) {
-    return (
-      <div style={{ background: cardBg, borderLeft: `3px solid ${primary}`, padding: "12px 16px", borderRadius: "0 6px 6px 0" }}>
-        <Editable slideId={slideId} block={block} index={index} isEditable={isEditable} update={update}
-          style={{ fontSize: `${bodySize}px`, color: primary, fontWeight: 600, lineHeight: 1.5 }} />
-      </div>
-    );
-  }
-
+function BulletItem({ slideId, block, index, primary, secondary, textColor, mutedColor, bodySize, isEditable, bulletIndex, update }: BulletItemProps) {
+  const accent = bulletIndex % 3 === 0 ? primary : bulletIndex % 3 === 1 ? secondary : primary;
   return (
-    <Editable slideId={slideId} block={block} index={index} isEditable={isEditable} update={update}
-      style={{ fontSize: `${bodySize}px`, color: mutedColor, lineHeight: 1.7 }} />
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: accent, marginTop: (bodySize * 1.65 - 8) / 2, flexShrink: 0 }} />
+      <Editable
+        slideId={slideId}
+        block={block}
+        index={index}
+        isEditable={isEditable}
+        update={update}
+        style={{ fontSize: `${bodySize + 1}px`, color: textColor, lineHeight: 1.65, flex: 1 }}
+      />
+    </div>
   );
 }
 
-interface ColumnProps {
+interface TwoColPanelProps {
   blocks: ContentBlock[];
   slide: SlideNode;
-  tokens?: DesignTokens | null;
-  primary: string;
+  accentColor: string;
   cardBg: string;
   textColor: string;
-  accentColor: string;
   bodySize: number;
   isEditable: boolean;
   update: (sid: string, bid: string, bi: number, t: string) => void;
 }
 
-function Column({ blocks, slide, cardBg, textColor, accentColor, bodySize, isEditable, update }: ColumnProps) {
+function TwoColPanel({ blocks, slide, accentColor, cardBg, textColor, bodySize, isEditable, update }: TwoColPanelProps) {
   return (
-    <div style={{ background: cardBg, borderRadius: 10, padding: "20px 24px", borderTop: `3px solid ${accentColor}` }}>
-      {blocks.map((b, i) => (
-        <BodyItem key={b.id || i} slideId={slide.id} block={b} index={slide.blocks.indexOf(b)}
-          primary={accentColor} cardBg={cardBg} textColor={textColor} mutedColor={textColor}
-          bodySize={bodySize} isEditable={isEditable} update={update} />
-      ))}
+    <div style={{ background: cardBg, borderRadius: 12, padding: "20px 24px", borderTop: `4px solid ${accentColor}`, overflow: "hidden" }}>
+      {blocks.map((b, i) => {
+        const lines = b.text.split("\n").filter(Boolean);
+        if (lines.length > 1) {
+          return (
+            <div key={b.id || i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {lines.map((line, li) => (
+                <div key={li} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor, marginTop: 7, flexShrink: 0 }} />
+                  <div style={{ fontSize: `${bodySize}px`, color: textColor, lineHeight: 1.6 }}>{line}</div>
+                </div>
+              ))}
+            </div>
+          );
+        }
+        return (
+          <div key={b.id || i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < blocks.length - 1 ? 10 : 0 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor, marginTop: 7, flexShrink: 0 }} />
+            <Editable slideId={slide.id} block={b} index={slide.blocks.indexOf(b)} isEditable={isEditable} update={update}
+              style={{ fontSize: `${bodySize}px`, color: textColor, lineHeight: 1.6, flex: 1 }} />
+          </div>
+        );
+      })}
     </div>
   );
 }
