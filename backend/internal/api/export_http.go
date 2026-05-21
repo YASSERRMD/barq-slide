@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -42,8 +43,8 @@ func HandleExportHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(body.Tokens) > 0 {
 		opts := protojson.UnmarshalOptions{DiscardUnknown: true}
 		if err := opts.Unmarshal(body.Tokens, &tokens); err != nil {
-			// Not fatal — use zero tokens with default colours.
-			_ = err
+			// Non-fatal: continue with default colours.
+			slog.Warn("failed to unmarshal design tokens, using defaults", "err", err)
 		}
 	}
 
