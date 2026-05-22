@@ -79,7 +79,7 @@ func DetectOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) []Over
 					Severity:   sev,
 				})
 			}
-		case "body":
+		case "bullet", "body":
 			if len(geo.Body) == 0 {
 				continue
 			}
@@ -91,8 +91,8 @@ func DetectOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) []Over
 				}
 				issues = append(issues, OverflowIssue{
 					SlideIndex: node.GetIndex(),
-					BlockRole:  "body",
-					Message:    "body text may overflow content region",
+					BlockRole:  block.GetRole(),
+					Message:    block.GetRole() + " text may overflow content region",
 					Severity:   sev,
 				})
 			}
@@ -140,7 +140,7 @@ func AutoFixOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) *barq
 		switch b.GetRole() {
 		case "heading":
 			maxRunes = maxRunesByRegion(geo.Title, headingSizePt)
-		case "body":
+		case "bullet", "body":
 			if len(geo.Body) > 0 {
 				maxRunes = maxRunesByRegion(geo.Body[0], bodySizePt)
 			}
@@ -161,9 +161,12 @@ func AutoFixOverflows(node *barqv1.SlideNode, tokens *barqv1.DesignTokens) *barq
 			}
 		}
 
+		// Preserve all fields from the original block; only replace Text.
 		newBlocks = append(newBlocks, &barqv1.ContentBlock{
-			Role: b.GetRole(),
-			Text: text,
+			Id:       b.GetId(),
+			Role:     b.GetRole(),
+			Text:     text,
+			Emphasis: b.GetEmphasis(),
 		})
 	}
 
