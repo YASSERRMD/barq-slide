@@ -38,7 +38,7 @@ func TestArcPlanner_Plan(t *testing.T) {
 
 	arcPlanner := planner.NewArcPlanner(mock)
 	parsed := &intent.ParsedIntent{
-		RequestId:  "req-001",
+		RequestID:  "req-001",
 		Prompt:     "Create a presentation about AI in healthcare",
 		Audience:   "Medical executives",
 		Tone:       "formal",
@@ -162,8 +162,8 @@ func TestExpander_SectionIDsPopulated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, slides, 1)
 
-	assert.Len(t, section.GetSlideIDs(), 1)
-	assert.Equal(t, slides[0].GetId(), section.GetSlideIDs()[0])
+	assert.Len(t, section.GetSlideIds(), 1)
+	assert.Equal(t, slides[0].GetId(), section.GetSlideIds()[0])
 }
 
 // goldenPrompt_ArcSystem is a snapshot of the arc system prompt for regression testing.
