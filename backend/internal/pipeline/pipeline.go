@@ -82,8 +82,8 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 	}
 	emit(ch, Event{
 		RequestID:   reqID,
-		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_PLAN_READY,
-		Message:     "Intent parsed",
+		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_STARTED,
+		Message:     fmt.Sprintf("Intent parsed (domain: %s)", parsed.Domain),
 		ProgressPct: 10,
 	})
 
