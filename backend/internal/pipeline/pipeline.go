@@ -11,6 +11,7 @@ import (
 	"github.com/YASSERRMD/barq-slides/internal/intent"
 	"github.com/YASSERRMD/barq-slides/internal/llm"
 	"github.com/YASSERRMD/barq-slides/internal/planner"
+	"github.com/YASSERRMD/barq-slides/internal/theme"
 	"github.com/YASSERRMD/barq-slides/internal/validate"
 )
 
@@ -102,13 +103,14 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 		Plan:        plan,
 	})
 
-	// ── Phase 3: Resolve design tokens ──────────────────────────────────────
-	log.Info("resolving design tokens")
-	tokens := defaultTokens()
+	// ── Phase 3: Resolve design tokens via mood-based theme engine ──────────────
+	log.Info("resolving design tokens", slog.String("domain", parsed.Domain))
+	mood := theme.ClassifyMood(parsed.Domain, parsed.TopicTags)
+	tokens := theme.GenerateTokens(mood)
 	emit(ch, Event{
 		RequestID:   reqID,
 		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_TOKENS_READY,
-		Message:     "Design tokens resolved",
+		Message:     fmt.Sprintf("Design tokens resolved (mood: %s)", mood),
 		ProgressPct: 25,
 		Tokens:      tokens,
 	})
@@ -134,7 +136,7 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 		node = validate.AutoFixOverflows(node, tokens)
 		nodes[i] = node
 
-		pct := int32(20) + int32(70)*(int32(i+1)/total)
+		pct := int32(20) + int32(70)*int32(i+1)/total
 		emit(ch, Event{
 			RequestID:   reqID,
 			Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_SLIDE_READY,
@@ -152,28 +154,3 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 	})
 }
 
-// defaultTokens returns a reasonable set of design tokens for the pipeline
-// without requiring an LLM call. Callers that need brand-matched tokens
-// should replace this with theme.GenerateTokens(mood).
-func defaultTokens() *barqv1.DesignTokens {
-	return &barqv1.DesignTokens{
-		PrimaryHex:      "#4F46E5",
-		SecondaryHex:    "#10B981",
-		BackgroundHex:   "#FFFFFF",
-		OnBackgroundHex: "#111827",
-		SurfaceHex:      "#F9FAFB",
-		MutedHex:        "#6B7280",
-		Heading: &barqv1.Typography{
-			FontFamily: "Inter",
-			SizePt:     36,
-		},
-		Subheading: &barqv1.Typography{
-			FontFamily: "Inter",
-			SizePt:     20,
-		},
-		Body: &barqv1.Typography{
-			FontFamily: "Inter",
-			SizePt:     14,
-		},
-	}
-}
