@@ -63,8 +63,8 @@ export function SlideEditor() {
       }
       // Future: parse streaming response and upsert slide.
       setRegenerateInstruction("");
-    } catch (err) {
-      console.error("Regeneration error:", err);
+    } catch (err: unknown) {
+      console.error("Regeneration error:", err instanceof Error ? err.message : err);
     } finally {
       setIsRegenerating(false);
     }

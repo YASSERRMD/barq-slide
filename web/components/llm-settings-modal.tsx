@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Settings2, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Settings2, X } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8090";
 
@@ -17,6 +17,7 @@ export function LlmSettingsModal() {
   const [showKey, setShowKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [configured, setConfigured] = useState(false);
 
   const [config, setConfig] = useState<LLMConfig>({
@@ -57,20 +58,25 @@ export function LlmSettingsModal() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      await fetch(`${API_BASE_URL}/api/llm-config`, {
+      const resp = await fetch(`${API_BASE_URL}/api/llm-config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "Unknown error");
+        throw new Error(`Server error (${resp.status}): ${text}`);
+      }
       setConfigured(true);
       setSaved(true);
       setTimeout(() => {
         setSaved(false);
         setIsOpen(false);
       }, 800);
-    } catch {
-      // ignore
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save configuration");
     } finally {
       setSaving(false);
     }
@@ -175,7 +181,14 @@ export function LlmSettingsModal() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            {saveError && (
+              <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-xs">
+                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>{saveError}</span>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={handleSave}
                 disabled={saving}
