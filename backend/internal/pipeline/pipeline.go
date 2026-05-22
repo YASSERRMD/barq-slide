@@ -21,10 +21,11 @@ type Event struct {
 	Event       barqv1.GenerateStreamEvent
 	Message     string
 	ProgressPct int32
-	Slide       *barqv1.SlideNode  // non-nil for SLIDE_READY events
-	Plan        *barqv1.DeckPlan   // non-nil for PLAN_READY events
+	Slide       *barqv1.SlideNode    // non-nil for SLIDE_READY events
+	Slides      []*barqv1.SlideNode  // non-nil for COMPLETED events (full ordered list)
+	Plan        *barqv1.DeckPlan     // non-nil for PLAN_READY events
 	Tokens      *barqv1.DesignTokens // non-nil for TOKENS_READY events
-	Err         error              // non-nil on FAILED events
+	Err         error                // non-nil on FAILED events
 }
 
 // Config bundles all pipeline dependencies.
@@ -151,6 +152,7 @@ func run(ctx context.Context, spec *barqv1.IntentSpec, cfg Config, ch chan<- Eve
 		Event:       barqv1.GenerateStreamEvent_GENERATE_STREAM_EVENT_COMPLETED,
 		Message:     fmt.Sprintf("Deck complete: %d slides", len(nodes)),
 		ProgressPct: 100,
+		Slides:      nodes,
 	})
 }
 
