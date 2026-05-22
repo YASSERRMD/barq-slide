@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Send, Sparkles, ChevronDown } from "lucide-react";
 import { useGenerateDeck } from "@/lib/store/use-generate-deck";
 import { useDeckStore } from "@/lib/store/deck-store";
-import { Eye, EyeOff } from "lucide-react";
 
 const TONE_OPTIONS = ["professional", "conversational", "academic", "bold", "minimal"] as const;
 const AUDIENCE_OPTIONS = ["executives", "team", "investors", "students", "general"] as const;
