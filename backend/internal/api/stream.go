@@ -30,6 +30,10 @@ func streamEvent(
 		resp.Slide = ev.Slide
 	}
 
+	if len(ev.Slides) > 0 {
+		resp.Slides = ev.Slides
+	}
+
 	if ev.Plan != nil {
 		resp.Plan = ev.Plan
 	}
